@@ -72,8 +72,8 @@ if __name__ == '__main__':
 
         logger.debug('show+')
         cv2.putText(image,
-                    "FPS: %f" % (1.0 / (time.time() - fps_time)),
-                    (10, 10),  cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    f"FRAME: {frame_num}",
+                    (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 0), 2)
 
         cv2.imwrite(os.path.join(os.path.join(args.output_dir, 'tmp'), f'{frame_num:03}.jpg'), image)
