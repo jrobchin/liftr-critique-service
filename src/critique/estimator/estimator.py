@@ -12,6 +12,7 @@ from pafprocess import pafprocess
 from critique.estimator import entities
 from critique.estimator import coco
 from critique.estimator.network.smoother import Smoother
+from critique import settings
 
 # import tensorflow.contrib.tensorrt as trt
 # from tensorflow.python.compiler.tensorrt import trt_convert as trt
@@ -62,7 +63,7 @@ class PoseEstimator:
 class TfPoseEstimator:
     # TODO : multi-scale
 
-    def __init__(self, graph_path, target_size=(320, 240), tf_config=None):
+    def __init__(self, target_size=(settings.HEIGHT, settings.WIDTH), graph_path=settings.MODEL_PATH, tf_config=None):
         self.target_size = target_size
 
         # load graph
@@ -293,7 +294,7 @@ class TfPoseEstimator:
         else:
             return cropped
 
-    def inference(self, npimg, resize_to_default=True, upsample_size=1.0):
+    def inference(self, npimg, resize_to_default=True, upsample_size=settings.RESIZE_OUT_RATIO):
         if npimg is None:
             raise Exception('The image is not valid. Please check your image exists.')
 

@@ -16,4 +16,5 @@ numpy
 imutils
 opencv-python-headless
 opencv-contrib-python-headless
-git+https://github.com/ppwwyyxx/tensorpack.git
+nose2
+# git+https://github.com/ppwwyyxx/tensorpack.git
