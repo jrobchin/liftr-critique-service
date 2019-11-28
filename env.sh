@@ -1,2 +1,2 @@
-export PYTHONPATH=/opt:$(pwd)/src:$PYTHONPATH
+export PYTHONPATH=/opt:$(pwd):$PYTHONPATH
 export TF_CPP_MIN_LOG_LEVEL='3'
