@@ -320,7 +320,7 @@ class PoseEstimator:
 
         if self.tensor_image.dtype == tf.quint8:
             # quantize input image
-            npimg = TfPoseEstimator._quantize_img(npimg)
+            npimg = _quantize_img(npimg)
             pass
 
         logger.debug('inference+ original shape=%dx%d' %
