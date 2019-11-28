@@ -1,1 +1,0 @@
-export PYTHONPATH=/opt:$(pwd)/src:$PYTHONPATH

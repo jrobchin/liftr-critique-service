@@ -12,7 +12,7 @@ scipy>=1.1.0
 slidingwindow==0.0.13
 tqdm>=4.23.4
 tensorflow==1.14.0
-numpy
+numpy<1.17
 imutils
 opencv-python-headless
 opencv-contrib-python-headless

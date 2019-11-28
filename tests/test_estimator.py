@@ -1,10 +1,15 @@
 import unittest
 import pickle
+
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import cv2
 
-from critique.estimator import PoseEstimator
+import warnings  
+with warnings.catch_warnings():  
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    from critique.estimator import PoseEstimator
 
 TEST_DATA_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 

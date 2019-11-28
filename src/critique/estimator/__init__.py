@@ -1,1 +1,1 @@
-from critique.estimator.estimator import TfPoseEstimator as PoseEstimator
+from critique.estimator.estimator import PoseEstimator
