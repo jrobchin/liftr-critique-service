@@ -11,14 +11,8 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-from critique.settings import BASE_DIR, MODEL_PATH
-from critique.estimator import PoseEstimator
+from src.estimator import PoseEstimator, draw_humans
 
-WIDTH = 432
-HEIGHT = 368
-GRAPH_PATH = MODEL_PATH
-CAMERA = 0
-RESIZE_OUT_RATIO = 4.0
 
 logger = logging.getLogger('TfPoseEstimator-WebCam')
 logger.setLevel(logging.DEBUG)
@@ -34,6 +28,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run pose estimation on a video.')
     parser.add_argument('-v', '--video', help='Path to video.')
     parser.add_argument('-i', '--image', help='Path to image.')
+    parser.add_argument('-p', '--pickle', help='Path to pickle the output.')
     parser.add_argument('-s', '--skip', help='Number of frames to skip between detections. 1 means skip none, 2 means detect every other frame.', default=1, type=int)
     parser.add_argument('-f', '--frames', help='Number of frames to process.', default=-1, type=int)
     parser.add_argument('output', help='For videos this should be a folder path, for images an file path.')
@@ -45,11 +40,7 @@ if __name__ == '__main__':
     elif args.video is not None and args.image is not None:
         raise ValueError("--video and --image cannot be given together.")
 
-    logger.debug('initialization %s' % (GRAPH_PATH))
-
-    tf_config = tf.ConfigProto()
-
-    e = PoseEstimator(GRAPH_PATH, target_size=(WIDTH, HEIGHT), tf_config=tf_config)
+    e = PoseEstimator()
 
     if args.video:
         logger.debug('cam read+')
@@ -80,7 +71,7 @@ if __name__ == '__main__':
                 continue
 
             logger.debug('image process+')
-            humans = e.inference(image, resize_to_default=True, upsample_size=RESIZE_OUT_RATIO)
+            humans = e.inference(image)
 
             logger.debug('postprocess+')
             image = PoseEstimator.draw_humans(image, humans, imgcopy=False)
@@ -105,7 +96,11 @@ if __name__ == '__main__':
     elif args.image:
         img = cv2.imread(args.image)
         
-        humans = e.inference(img, resize_to_default=True, upsample_size=RESIZE_OUT_RATIO)
-        res_image = PoseEstimator.draw_humans(img, humans, imgcopy=False)
+        humans = e.inference(img, resize_to_default=True)
+        res_image = draw_humans(img, humans, imgcopy=False)
 
         cv2.imwrite(args.output, res_image)
+
+        if args.pickle:
+            with open(args.pickle, 'wb') as f:
+                pickle.dump(humans, f)

@@ -1,1 +1,1 @@
-from src.estimator.estimator import PoseEstimator
+from src.estimator.estimator import PoseEstimator, draw_humans

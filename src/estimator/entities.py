@@ -1,4 +1,5 @@
 import math
+from enum import Enum
 
 from src.estimator import coco
 
@@ -12,6 +13,46 @@ def _include_part(part_list, part_idx):
         if part_idx == part.part_idx:
             return True, part
     return False, None
+
+
+class Part(Enum):
+    NOSE = 0
+    NECK = 1
+    RSHOULDER = 2
+    RELBOW = 3
+    RWRIST = 4
+    LSHOULDER = 5
+    LELBOW = 6
+    LWRIST = 7
+    RHIP = 8
+    RKNEE = 9
+    RANKLE = 10
+    LHIP = 11
+    LKNEE = 12
+    LANKLE = 13
+    REYE = 14
+    LEYE = 15
+    REAR = 16
+    LEAR = 17
+    AVGHEAD = 18
+    AVGSHOULDER = 19
+    AVGELBOW = 20
+    AVGWRIST = 21
+    AVGHIP = 22
+    AVGKNEE = 23
+    AVGANKLE = 24
+    BACKGROUND = 25
+
+
+part_pairs = [
+    (1, 2), (1, 5), (2, 3), (3, 4), (5, 6), (6, 7), (1, 8), (8, 9), (9, 10), (1, 11),
+    (11, 12), (12, 13), (1, 0), (0, 14), (14, 16), (0, 15), (15, 17), (2, 16), (5, 17)
+]
+
+
+part_colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
+              [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
+              [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
 
 
 class Human:

@@ -10,6 +10,39 @@ batchnorm_fused = True
 activation_fn = tf.nn.relu
 
 
+class Part(Enum):
+    NOSE = 0
+    NECK = 1
+    RSHOULDER = 2
+    RELBOW = 3
+    RWRIST = 4
+    LSHOULDER = 5
+    LELBOW = 6
+    LWRIST = 7
+    RHIP = 8
+    RKNEE = 9
+    RANKLE = 10
+    LHIP = 11
+    LKNEE = 12
+    LANKLE = 13
+    REYE = 14
+    LEYE = 15
+    REAR = 16
+    LEAR = 17
+    AVGHEAD = 18
+    AVGSHOULDER = 19
+    AVGELBOW = 20
+    AVGWRIST = 21
+    AVGHIP = 22
+    AVGKNEE = 23
+    AVGANKLE = 24
+    BACKGROUND = 25
+
+part_pairs = [
+    (1, 2), (1, 5), (2, 3), (3, 4), (5, 6), (6, 7), (1, 8), (8, 9), (9, 10), (1, 11),
+    (11, 12), (12, 13), (1, 0), (0, 14), (14, 16), (0, 15), (15, 17), (2, 16), (5, 17)
+]
+
 class CocoPart(Enum):
     Nose = 0
     Neck = 1
@@ -31,69 +64,6 @@ class CocoPart(Enum):
     LEar = 17
     Background = 18
 
-
-class MPIIPart(Enum):
-    RAnkle = 0
-    RKnee = 1
-    RHip = 2
-    LHip = 3
-    LKnee = 4
-    LAnkle = 5
-    RWrist = 6
-    RElbow = 7
-    RShoulder = 8
-    LShoulder = 9
-    LElbow = 10
-    LWrist = 11
-    Neck = 12
-    Head = 13
-
-    @staticmethod
-    def from_coco(human):
-        # t = {
-        #     MPIIPart.RAnkle: CocoPart.RAnkle,
-        #     MPIIPart.RKnee: CocoPart.RKnee,
-        #     MPIIPart.RHip: CocoPart.RHip,
-        #     MPIIPart.LHip: CocoPart.LHip,
-        #     MPIIPart.LKnee: CocoPart.LKnee,
-        #     MPIIPart.LAnkle: CocoPart.LAnkle,
-        #     MPIIPart.RWrist: CocoPart.RWrist,
-        #     MPIIPart.RElbow: CocoPart.RElbow,
-        #     MPIIPart.RShoulder: CocoPart.RShoulder,
-        #     MPIIPart.LShoulder: CocoPart.LShoulder,
-        #     MPIIPart.LElbow: CocoPart.LElbow,
-        #     MPIIPart.LWrist: CocoPart.LWrist,
-        #     MPIIPart.Neck: CocoPart.Neck,
-        #     MPIIPart.Nose: CocoPart.Nose,
-        # }
-
-        t = [
-            (MPIIPart.Head, CocoPart.Nose),
-            (MPIIPart.Neck, CocoPart.Neck),
-            (MPIIPart.RShoulder, CocoPart.RShoulder),
-            (MPIIPart.RElbow, CocoPart.RElbow),
-            (MPIIPart.RWrist, CocoPart.RWrist),
-            (MPIIPart.LShoulder, CocoPart.LShoulder),
-            (MPIIPart.LElbow, CocoPart.LElbow),
-            (MPIIPart.LWrist, CocoPart.LWrist),
-            (MPIIPart.RHip, CocoPart.RHip),
-            (MPIIPart.RKnee, CocoPart.RKnee),
-            (MPIIPart.RAnkle, CocoPart.RAnkle),
-            (MPIIPart.LHip, CocoPart.LHip),
-            (MPIIPart.LKnee, CocoPart.LKnee),
-            (MPIIPart.LAnkle, CocoPart.LAnkle),
-        ]
-
-        pose_2d_mpii = []
-        visibilty = []
-        for mpi, coco in t:
-            if coco.value not in human.body_parts.keys():
-                pose_2d_mpii.append((0, 0))
-                visibilty.append(False)
-                continue
-            pose_2d_mpii.append((human.body_parts[coco.value].x, human.body_parts[coco.value].y))
-            visibilty.append(True)
-        return pose_2d_mpii, visibilty
 
 CocoPairs = [
     (1, 2), (1, 5), (2, 3), (3, 4), (5, 6), (6, 7), (1, 8), (8, 9), (9, 10), (1, 11),

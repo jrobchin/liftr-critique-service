@@ -10,7 +10,6 @@ import time
 
 from pafprocess import pafprocess
 from src.estimator import entities
-from src.estimator import coco
 from src.estimator.network.smoother import Smoother
 from src import settings
 
@@ -36,6 +35,7 @@ def estimate_paf(peaks, heat_mat, paf_mat):
         human = entities.Human([])
         is_added = False
 
+        # The first 18 parts are obtained from the pafprocess
         for part_idx in range(18):
             c_idx = int(pafprocess.get_part_cid(human_id, part_idx))
             if c_idx < 0:
@@ -62,35 +62,6 @@ def _quantize_img(npimg):
     # npimg_q += 0.5
     npimg_q = npimg_q.astype(np.uint8)
     return npimg_q
-
-def draw_humans(npimg, humans, imgcopy=False):
-    if imgcopy:
-        npimg = np.copy(npimg)
-    image_h, image_w = npimg.shape[:2]
-    centers = {}
-    for human in humans:
-        # draw point
-        for i in range(coco.CocoPart.Background.value):
-            if i not in human.body_parts.keys():
-                continue
-
-            body_part = human.body_parts[i]
-            center = (int(body_part.x * image_w + 0.5),
-                        int(body_part.y * image_h + 0.5))
-            centers[i] = center
-            cv2.circle(npimg, center, 3,
-                        coco.CocoColors[i], thickness=3, lineType=8, shift=0)
-
-        # draw line
-        for pair_order, pair in enumerate(coco.CocoPairsRender):
-            if pair[0] not in human.body_parts.keys() or pair[1] not in human.body_parts.keys():
-                continue
-
-            # npimg = cv2.line(npimg, centers[pair[0]], centers[pair[1]], CocoColors[pair_order], 3)
-            cv2.line(
-                npimg, centers[pair[0]], centers[pair[1]], coco.CocoColors[pair_order], 3)
-
-    return npimg
 
 
 class PoseEstimator:
