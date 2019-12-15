@@ -11,8 +11,8 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-from critique.settings import BASE_DIR, MODEL_PATH
-from critique.estimator import PoseEstimator
+from src.critique.settings import BASE_DIR, MODEL_PATH
+from src.critique.estimator import PoseEstimator, draw_humans
 
 WIDTH = 432
 HEIGHT = 368
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     tf_config = tf.ConfigProto()
 
-    e = PoseEstimator(GRAPH_PATH, target_size=(WIDTH, HEIGHT), tf_config=tf_config)
+    e = PoseEstimator()
 
     if args.video:
         logger.debug('cam read+')
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         ret_val, image = cam.read()
         logger.info('cam image=%dx%d' % (image.shape[1], image.shape[0]))
 
-        tmp_folder = os.path.join(os.path.join(args.output_dir, 'tmp'))
+        tmp_folder = os.path.join(os.path.join(args.output, 'tmp'))
 
         try:
             os.mkdir(tmp_folder)
@@ -83,22 +83,18 @@ if __name__ == '__main__':
             humans = e.inference(image, resize_to_default=True, upsample_size=RESIZE_OUT_RATIO)
 
             logger.debug('postprocess+')
-            image = PoseEstimator.draw_humans(image, humans, imgcopy=False)
+            image = draw_humans(image, humans, imgcopy=False)
 
             logger.debug('show+')
-            cv2.putText(image,
-                        f"FRAME: {frame_num}",
-                        (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        (0, 255, 0), 2)
 
-            cv2.imwrite(os.path.join(os.path.join(args.output_dir, 'tmp'), f'{frame_num:05}.jpg'), image)
+            cv2.imwrite(os.path.join(os.path.join(args.output, 'tmp'), f'{frame_num:05}.jpg'), image)
 
             fps_time = time.time()
             logger.debug('finished+')
 
         cam.release()
 
-        subprocess.run("ffmpeg -y -framerate {} -pattern_type glob -i {} {}".format(10, os.path.join(tmp_folder, '*.jpg'), os.path.join(args.output_dir, 'output.mp4')).split())
+        subprocess.run("ffmpeg -y -framerate {} -pattern_type glob -i {} {}".format(10, os.path.join(tmp_folder, '*.jpg'), os.path.join(args.output, 'output.mp4')).split())
 
         shutil.rmtree(tmp_folder)
     
@@ -106,6 +102,6 @@ if __name__ == '__main__':
         img = cv2.imread(args.image)
         
         humans = e.inference(img, resize_to_default=True, upsample_size=RESIZE_OUT_RATIO)
-        res_image = PoseEstimator.draw_humans(img, humans, imgcopy=False)
+        res_image = draw_humans(img, humans, imgcopy=False)
 
         cv2.imwrite(args.output, res_image)

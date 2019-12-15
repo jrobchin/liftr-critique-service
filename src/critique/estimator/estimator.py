@@ -9,10 +9,10 @@ import tensorflow as tf
 import time
 
 from pafprocess import pafprocess
-from critique.estimator import entities
-from critique.estimator import coco
-from critique.estimator.network.smoother import Smoother
-from critique import settings
+from src.critique.estimator import entities
+from src.critique.estimator import coco
+from src.critique.estimator.network.smoother import Smoother
+from src.critique import settings
 
 # import tensorflow.contrib.tensorrt as trt
 # from tensorflow.python.compiler.tensorrt import trt_convert as trt

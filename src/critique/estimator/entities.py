@@ -1,6 +1,6 @@
 import math
 
-from critique.estimator import coco
+from src.critique.estimator import coco
 
 
 def _round(v):

@@ -1,1 +1,1 @@
-from critique.estimator.estimator import PoseEstimator
+from src.critique.estimator.estimator import PoseEstimator, draw_humans

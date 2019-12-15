@@ -37,11 +37,12 @@ COPY lib/pafprocess /opt/pafprocess
 RUN cd /opt/pafprocess && \
     swig -python -c++ pafprocess.i && python setup.py build_ext --inplace
 
+# Add to python path
+ENV PYTHONPATH=/opt:/workspaces/liftr-critique-service:$PYTHONPATH
+
 RUN useradd -m critique
 USER critique
 
 ENV HOME /home/critique
-
-ENV PYTHONPATH="/opt/:{$PYTHONPATH}"
 
 ENV DEBIAN_FRONTEND=dialog
