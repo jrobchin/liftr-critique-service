@@ -1,4 +1,18 @@
 {
-    "python.pythonPath": "/usr/local/bin/python",
     "remote.WSL.fileWatcher.polling": true,
+    "python.pythonPath": "/usr/local/bin/python3.7",
+    "python.linting.pylintArgs": [
+        "--errors-only",
+        "--generated-members=numpy.* ,torch.* ,cv2.* , cv.*"
+    ],
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.unittestEnabled": true
 }

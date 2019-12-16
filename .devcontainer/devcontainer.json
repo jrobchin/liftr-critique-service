@@ -21,6 +21,8 @@
 		// new files getting created as root. See https://aka.ms/vscode-remote/containers/non-root-user
 		// for the needed Dockerfile updates and then uncomment the next line.
 		// "-u", "1000"
+		
+		"--gpus", "all"
 	],
 
 	// Use 'settings' to set *default* container specific settings.json values on container create. 
@@ -36,7 +38,7 @@
 	// "appPort": [],
 
 	// Uncomment the next line to run commands after the container is created - for example installing git.
-	"postCreateCommand": "apt-get update && apt-get install -y git",
+	"postCreateCommand": "",
 
 	// Add the IDs of extensions you want installed when the container is created in the array below.
 	"extensions": [
