@@ -22,7 +22,9 @@
 		// for the needed Dockerfile updates and then uncomment the next line.
 		// "-u", "1000"
 		
-		"--gpus", "all"
+		"--gpus", "all",
+		"--network", "liftr",
+		"-p", "5555:5555"
 	],
 
 	// Use 'settings' to set *default* container specific settings.json values on container create. 

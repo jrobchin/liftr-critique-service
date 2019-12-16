@@ -57,5 +57,6 @@ RUN useradd -m critique
 USER critique
 
 ENV HOME /home/critique
+RUN echo 'alias python=python3.7' >> ~/.bashrc
 
 ENV DEBIAN_FRONTEND=dialog

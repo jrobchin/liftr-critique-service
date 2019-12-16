@@ -1,5 +1,6 @@
 import cv2
-
+import numpy as np
+import urllib
 
 class ImageReader(object):
     def __init__(self, file_names):
@@ -39,3 +40,9 @@ class VideoReader(object):
         if not was_read:
             raise StopIteration
         return img
+
+def url_to_image(url):
+	resp = urllib.request.urlopen(url)
+	image = np.asarray(bytearray(resp.read()), dtype="uint8")
+	image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+	return image

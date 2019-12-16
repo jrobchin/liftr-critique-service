@@ -4,4 +4,7 @@ torchvision>=0.2.1
 pycocotools==2.0.0
 opencv-python>=3.4.0.14
 nose2
-ptvsd
+celery
+click
+redis
+flower
