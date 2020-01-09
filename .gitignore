@@ -6,3 +6,4 @@ tmp/
 *.bk
 env/
 tmp.*
+pyenv/

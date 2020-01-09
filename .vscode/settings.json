@@ -1,6 +1,6 @@
 {
     "remote.WSL.fileWatcher.polling": true,
-    "python.pythonPath": "/usr/local/bin/python3.7",
+    "python.pythonPath": "pyenv/bin/python",
     "python.linting.pylintArgs": [
         "--errors-only",
         "--generated-members=numpy.* ,torch.* ,cv2.* , cv.*"
@@ -14,5 +14,8 @@
     ],
     "python.testing.pytestEnabled": false,
     "python.testing.nosetestsEnabled": false,
-    "python.testing.unittestEnabled": true
+    "python.testing.unittestEnabled": true,
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}"
+    }
 }

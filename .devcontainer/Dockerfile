@@ -44,7 +44,7 @@ RUN cd Python-3.7.5 && \
     make -j 8 && \
     make altinstall
 
-RUN python3.7 -m pip install pylint cython numpy
+RUN python3.7 -m pip install pylint cython numpy rope
 
 # Install Python dependencies
 COPY requirements.txt /requirements.txt

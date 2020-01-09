@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import torch
 
+from critique.utils import COLORS
 from critique.settings import CHECKPOINT_PATH
 from critique.pose.models.with_mobilenet import PoseEstimationWithMobileNet
 from critique.pose.modules import keypoints, pose as pose_module
@@ -53,7 +54,7 @@ class PoseEstimator:
 
         return heatmaps, pafs, scale, pad
     
-    def estimate(self, img):
+    def estimate(self, img, conf_thresh=0):
         heatmaps, pafs, scale, pad = self._infer(img)
 
         total_keypoints_num = 0
@@ -66,6 +67,8 @@ class PoseEstimator:
             all_keypoints[kpt_id, 0] = (all_keypoints[kpt_id, 0] * STRIDE / UPSAMPLE_RATIO - pad[1]) / scale
             all_keypoints[kpt_id, 1] = (all_keypoints[kpt_id, 1] * STRIDE / UPSAMPLE_RATIO - pad[0]) / scale
         current_poses = []
+
+        color_num = 0
         for n in range(len(pose_entries)):
             if len(pose_entries[n]) == 0:
                 continue
@@ -74,7 +77,9 @@ class PoseEstimator:
                 if pose_entries[n][kpt_id] != -1.0:  # keypoint was found
                     pose_keypoints[kpt_id, 0] = int(all_keypoints[int(pose_entries[n][kpt_id]), 0])
                     pose_keypoints[kpt_id, 1] = int(all_keypoints[int(pose_entries[n][kpt_id]), 1])
-            pose = pose_module.Pose(pose_keypoints, pose_entries[n][18])
-            current_poses.append(pose)
+            pose = pose_module.Pose(pose_keypoints, pose_entries[n][18], COLORS[color_num])
+            color_num = (color_num + 1) % len(COLORS)
+            if pose.confidence > conf_thresh:
+                current_poses.append(pose)
 
         return current_poses

@@ -3,21 +3,22 @@ import numpy as np
 import urllib
 
 class ImageReader(object):
-    def __init__(self, file_names):
-        self.file_names = file_names
-        self.max_idx = len(file_names)
+    def __init__(self, filename):
+        self.filename = filename
+        self.read = False
+    
+    def get_image(self):
+        img = cv2.imread(self.filename, cv2.IMREAD_COLOR)
+        return img
 
     def __iter__(self):
-        self.idx = 0
         return self
 
     def __next__(self):
-        if self.idx == self.max_idx:
+        if self.read:
             raise StopIteration
-        img = cv2.imread(self.file_names[self.idx], cv2.IMREAD_COLOR)
-        if img.size == 0:
-            raise IOError('Image {} cannot be read'.format(self.file_names[self.idx]))
-        self.idx = self.idx + 1
+        img = cv2.imread(self.filename, cv2.IMREAD_COLOR)
+        self.read = True
         return img
 
 
@@ -28,6 +29,18 @@ class VideoReader(object):
             self.file_name = int(file_name)
         except ValueError:
             pass
+        
+        self.cap = cv2.VideoCapture(self.file_name)
+        self.width, self.height, self.fps, self.frame_count = self.get_info()
+    
+    def get_info(self):
+        """If a video capture is defined, return the `width`, `height`, `fps`, and `frame_count` in a tuple."""
+        if self.cap:
+            width  = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps = self.cap.get(cv2.CAP_PROP_FPS)
+            frame_count = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
+            return width, height, fps, frame_count
 
     def __iter__(self):
         self.cap = cv2.VideoCapture(self.file_name)
