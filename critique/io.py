@@ -30,17 +30,17 @@ class VideoReader(object):
         except ValueError:
             pass
         
-        self.cap = cv2.VideoCapture(self.file_name)
-        self.width, self.height, self.fps, self.frame_count = self.get_info()
+        cap = cv2.VideoCapture(self.file_name)
+        self.width, self.height, self.fps = self.get_info(cap)
+        cap.release()
     
-    def get_info(self):
+    def get_info(self, cap):
         """If a video capture is defined, return the `width`, `height`, `fps`, and `frame_count` in a tuple."""
-        if self.cap:
-            width  = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            fps = self.cap.get(cv2.CAP_PROP_FPS)
-            frame_count = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
-            return width, height, fps, frame_count
+        if cap:
+            width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            return width, height, fps
 
     def __iter__(self):
         self.cap = cv2.VideoCapture(self.file_name)
