@@ -71,7 +71,14 @@ def calc_angle(
 
     v1 = pt1 - pt2
     v2 = pt3 - pt2
-    angle = np.arccos(v1.dot(v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+
+    norm_v1 = np.linalg.norm(v1)
+    norm_v2 = np.linalg.norm(v2)
+
+    if norm_v1 == 0 or norm_v2 == 0:
+        return None
+
+    angle = np.arccos(v1.dot(v2) / (norm_v1 * norm_v2))
 
     if degrees:
         return deg(angle)
@@ -244,16 +251,16 @@ class PoseHeuristics():
     
     def _generate_heuristics(self):
         for key, func in self.heuristic_funcs.items():
-            logging.info((key, func))
+            logging.debug((key, func))
             val = func(self.pose, self.degrees)
             if val is not np.nan:
                 self.heuristics[key] = val
             else:
                 self.heuristics[key] = None 
     
-    def draw_heuristics(self, img):
+    def draw(self, img):
         for key, val in self.heuristics.items():
-            if not np.isnan(val):
+            if val is not None:
                 draw_keypoint = self.draw_locations[key]
                 if isinstance(draw_keypoint, tuple):
                     draw_pos = np.int_(midpoint(
