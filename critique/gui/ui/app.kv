@@ -1,0 +1,38 @@
+#:kivy 1.11
+
+<MenuScreen>:
+    BoxLayout:
+        Button:
+            text: 'display'
+            on_touch_up:
+                root.manager.transition.direction = 'left' 
+                root.manager.current = 'display'
+
+<DisplayScreen>:
+    BoxLayout:
+        orientation:'vertical'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            # cols: 3
+            height: 40
+            size_hint: 1.0, None
+
+            Button:
+                text: 'back'
+                size_hint: None, None
+                size: 75, 40
+                on_press: 
+                    root.manager.transition.direction = 'right'
+                    root.manager.current = 'menu'
+
+            Label:
+                text: 'Workout: Squats'
+            
+            Button:
+                size_hint: None, None
+                size: 75, 40
+            
+        Image:
+            source: './gui/assets/tpose.jpg'
+            allow_stretch: True

@@ -11,3 +11,4 @@ celery
 click
 redis
 flower
+kivy

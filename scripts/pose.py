@@ -129,7 +129,7 @@ def get_heuristics(image, output, draw, degrees):
     
     if draw:
         for h in heuristics:
-            h.draw_heuristics(frame)
+            h.draw(frame)
         cv2.imshow('frame', frame)
         cv2.waitKey(0)
 
@@ -153,7 +153,7 @@ def get_heuristics_video(video, degrees, kpt_filter):
             heuristics.append(ph)
         
         for h in heuristics:
-            h.draw_heuristics(frame)
+            h.draw(frame)
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
