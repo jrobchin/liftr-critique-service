@@ -159,5 +159,29 @@ def get_heuristics_video(video, degrees, kpt_filter):
             break
 
 
+@cli.command()
+@click.argument('camera')
+@click.option('--degrees', is_flag=True, help='flag to format in degrees')
+@click.option('--kpt-filter', type=click.Choice(['left', 'right'], case_sensitive=False), help='filter to apply to keypoints')
+def live_pose(camera, degrees, kpt_filter):
+    frame_provider = VideoReader(int(camera))
+    estimator = PoseEstimator()
+
+    for frame in frame_provider:
+        heuristics = []
+
+        poses = estimator.estimate(frame)
+        for pose in poses:
+            pose = pose.get_kpt_group(kpt_filter)
+            pose.draw(frame)
+            ph = PoseHeuristics(pose, degrees)
+            heuristics.append(ph)
+        
+        for h in heuristics:
+            h.draw(frame)
+        cv2.imshow('frame', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
 if __name__ == "__main__":
     cli() # pylint: disable=no-value-for-parameter

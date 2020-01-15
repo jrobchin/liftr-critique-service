@@ -133,12 +133,14 @@ class Pose():
         Return new pose with only keypoints in `group`.
         Must be one of `left` or `right`.
         """
-        keypoints = copy.copy(self.keypoints) # TODO: maybe inefficient to copy and then iterate
-        for i, kpt in enumerate(keypoints):
-            if i not in self.kpt_groups[group]:
-                keypoints[i] = [-1, -1]
-                
-        return Pose(keypoints, self.confidence, self.color)
+        if group is not None:
+            keypoints = copy.copy(self.keypoints) # TODO: maybe inefficient to copy and then iterate
+            for i, kpt in enumerate(keypoints):
+                if i not in self.kpt_groups[group]:
+                    keypoints[i] = [-1, -1]
+            return Pose(keypoints, self.confidence, self.color)
+        else:
+            return self
 
 
 def get_similarity(a, b, threshold=0.5):
