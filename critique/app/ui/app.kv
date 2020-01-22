@@ -1,0 +1,209 @@
+#:kivy 1.11
+<Widget>:
+    # canvas:
+    #     Rectangle:
+    #         size: 2, 2
+    #         pos: self.pos
+
+
+<MenuScreen>:
+    FloatLayout:
+        RelativeLayout:
+            id: panel
+            size_hint_x: 0.6
+            size_hint_y: 0.5
+            pos_hint: { 'center_x': 0.5, 'center_y': 0.5 }
+
+            canvas.before:
+                Color: 
+                    rgb: 1, 1, 1
+                    a: 0.25
+                RoundedRectangle:
+                    size: self.size
+
+            AnchorLayout:
+                anchor_x: 'center'
+                anchor_y: 'top'
+
+                Label:
+                    text: "[b]LIFTR[/b] [color=#000000]train[/color]"
+                    markup: True
+                    height: 150
+                    size_hint: 1.0, None
+                    color: 208/255, 0, 0, 1
+                    font_size: 81
+                    pos_hint: { 'center_x': 0.5 }
+            
+            AnchorLayout:
+                anchor_x: 'center'
+                anchor_y: 'center'
+
+                SessionKeyLabel:
+                    id: session_key_label
+                    markup: True
+                    height: 150
+                    size_hint: 1.0, None
+                    color: 0, 0, 0, 1
+                    font_size: 32
+                    pos_hint: { 'center_x': 0.5 }
+
+            AnchorLayout:
+                anchor_x: 'center'
+                anchor_y: 'bottom'
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    spacing: 10
+                    width: 310
+                    size_hint: None, None
+                    padding: 0, 30
+                
+                    Button:
+                        text: 'Start'
+                        size_hint: None, None
+                        size: 150, 40
+                        border: 0, 0, 0, 0
+                        color: 0, 0, 0, 1
+                        background_color: 0, 0, 0, 0
+                        canvas.before:
+                            Color: 
+                                rgb: 208/255, 0, 0
+                            RoundedRectangle:
+                                size: self.size
+                                pos: self.pos
+                        on_press:
+                            root.manager.transition.direction = 'left' 
+                            root.manager.current = 'display'
+                            root.manager.get_screen('display').ids.display.start()
+
+                    Button:
+                        text: 'About'
+                        size_hint: None, None
+                        size: 150, 40
+                        border: 0, 0, 0, 0
+                        color: 0, 0, 0, 1
+                        background_color: 1, 1, 1, 0
+                        canvas.before:
+                            Color: 
+                                rgb: 208/255, 0, 0
+                            RoundedRectangle:
+                                size: self.size
+                                pos: self.pos
+                        on_press:
+                            root.manager.transition.direction = 'up'
+                            root.manager.current = 'about'
+
+<AboutScreen>:
+    FloatLayout:
+        RelativeLayout:
+            id: panel
+            size_hint_x: 0.6
+            size_hint_y: 0.5
+            pos_hint: { 'center_x': 0.5, 'center_y': 0.5 }
+
+            canvas.before:
+                Color: 
+                    rgb: 1, 1, 1
+                    a: 0.25
+                RoundedRectangle:
+                    size: self.size
+        
+            BoxLayout:
+                orientation: 'vertical'
+                
+                Label:
+                    text: "Liftr"
+                    size_hint_y: None
+                    height: 100
+                    text_size: self.size[0] - 20, self.size[1]
+                    color: 208/255, 0, 0, 1
+                    font_size: 81
+                
+                Label:
+                    size_hint_y: None
+                    text_size: self.size[0] - 30, self.size[1]
+                    text: "Liftr is a virtual personal fitness trainer that uses AI to estimator your pose and give you real-time critiques."
+                    font_size: 24
+
+                Widget:
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: 60
+                    
+                    Widget:
+                        size_hint: None, None
+                        size: 20, 40
+
+                    AnchorLayout:
+                        anchor_x: 'left'
+                        anchor_y: 'center'
+
+                        Button:
+                            text: "Back"
+                            size_hint: None, None
+                            size: 75, 40
+                            on_press:
+                                root.manager.transition.direction = 'down'
+                                root.manager.current = 'menu'
+
+<DisplayScreen>:
+    FloatLayout:
+        Label:
+            id: error_label
+            text: "Error reading from webcam..."
+            opacity: 0
+
+    BoxLayout:
+        orientation:'vertical'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            height: 40
+            size_hint: 1.0, None
+
+            Button:
+                text: 'back'
+                size_hint: None, None
+                size: 75, 40
+                on_press: 
+                    root.manager.transition.direction = 'right'
+                    root.manager.current = 'menu'
+                    root.ids.display.stop()
+
+            Label:
+                text: 'Workout: Squats'
+                size_hint: None, None
+                size: 300, 40
+                text_size: self.size
+                padding_x: 20
+                valign: 'middle'
+
+        DisplayWidget:
+            id: display
+            camera: 0
+
+        BoxLayout:
+            orientation: 'horizontal'
+            height: 40
+            size_hint: 1.0, None
+
+            Label:
+                text: "Camera:"
+                size: self.texture_size[0] + 20, 40
+                size_hint: None, None
+
+            Button:
+                text: '0'
+                size_hint: None, None
+                size: 75, 40
+                on_press:
+                    display.camera = 0
+            
+            Button:
+                text: '1'
+                size_hint: None, None
+                size: 75, 40
+                on_press:
+                    display.camera = 1
