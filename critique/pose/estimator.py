@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import torch
 
+from critique import settings
 from critique.utils import COLORS
 from critique.settings import CHECKPOINT_PATH
 from critique.pose.models.with_mobilenet import PoseEstimationWithMobileNet
@@ -19,7 +20,8 @@ class PoseEstimator:
     def __init__(self, height_size=256):
         self.height_size = height_size
 
-        self._init_net()
+        if not settings.DISABLE_NET:
+            self._init_net()
 
     def _init_net(self):
         self.net = PoseEstimationWithMobileNet()
@@ -55,6 +57,9 @@ class PoseEstimator:
         return heatmaps, pafs, scale, pad
     
     def estimate(self, img, conf_thresh=0):
+        if settings.DISABLE_NET:
+            return []
+
         heatmaps, pafs, scale, pad = self._infer(img)
 
         total_keypoints_num = 0

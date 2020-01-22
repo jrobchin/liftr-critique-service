@@ -128,7 +128,7 @@ class Pose():
             d[name] = val
         return d
 
-    def get_kpt_group(self, group):
+    def get_kpt_group(self, group=None):
         """
         Return new pose with only keypoints in `group`.
         Must be one of `left` or `right`.
