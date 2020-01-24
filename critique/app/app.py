@@ -103,13 +103,23 @@ class MenuScreen(screenmanager.Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        Clock.schedule_once(self._on_start, 0)
+        session_service.bind('start_session', lambda _: self._transition_to_display())
+
+        Clock.schedule_once(self.connect, 0)
         
-    def _on_start(self, *args):
+    def connect(self, *args):
         def _cb():
             self.ids.session_key_label.text = f"Session Key: {session_service.s_key}"
-
+        
         session_service.connect(callback=_cb)
+
+    def _transition_to_display(self):
+        self.manager.get_screen('display').ids.display.start()
+        self.manager.transition.direction = 'left' 
+        self.manager.current = 'display'
+
+    def _transition_to_about(self):
+        pass
 
 class DisplayScreen(screenmanager.Screen):
     pass

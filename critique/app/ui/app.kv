@@ -8,6 +8,16 @@
 
 <MenuScreen>:
     FloatLayout:
+        Button:
+            text: 'Refresh Session'
+            size_hint: None, None
+            size: 150, 40
+            border: 0, 0, 0, 0
+            color: 1, 1, 1, 1
+            background_color: 1, 1, 1, 0.2
+            on_press:
+                root.connect()
+        
         RelativeLayout:
             id: panel
             size_hint_x: 0.6
@@ -72,9 +82,7 @@
                                 size: self.size
                                 pos: self.pos
                         on_press:
-                            root.manager.transition.direction = 'left' 
-                            root.manager.current = 'display'
-                            root.manager.get_screen('display').ids.display.start()
+                            root._transition_to_display()
 
                     Button:
                         text: 'About'
