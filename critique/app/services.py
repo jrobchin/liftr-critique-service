@@ -17,19 +17,29 @@ class __SessionService__:
         logging.info(f"Setting session key {key}")
         self.s_key = key
 
-    def connect(self, hostname=settings.BACKEND_DOMAIN, callback=None):
+    def connect(self, hostname=settings.BACKEND_DOMAIN, on_success=None, on_error=None):
+        logging.info("Connecting to server...")
         if self.client.connected:
             self.client.disconnect()
 
-        self.client.connect(f"http://{hostname}")
+        # TODO: Clean this up
+        try:
+            self.client.connect(f"http://{hostname}")
+        except socketio.exceptions.ConnectionError:
+            if on_error:
+                on_error()
+                return
         if not self.client.connected:
-            raise ConnectionError("Could not connect to backend...")
+            if on_error:
+                on_error()
+                return
         logging.info("Connected to backend")
 
         def _cb(d):
             d = json.loads(d)
             self._set_s_key(d['data']['s_key'])
-            callback()
+            if on_success:
+                on_success()
 
         self.client.emit('register_machine', {
             'client_type': 'machine'

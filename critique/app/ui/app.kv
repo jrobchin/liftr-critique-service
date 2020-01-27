@@ -17,7 +17,7 @@
             background_color: 1, 1, 1, 0.2
             on_press:
                 root.connect()
-        
+
         RelativeLayout:
             id: panel
             size_hint_x: 0.6
@@ -25,7 +25,7 @@
             pos_hint: { 'center_x': 0.5, 'center_y': 0.5 }
 
             canvas.before:
-                Color: 
+                Color:
                     rgb: 1, 1, 1
                     a: 0.25
                 RoundedRectangle:
@@ -43,7 +43,7 @@
                     color: 208/255, 0, 0, 1
                     font_size: 81
                     pos_hint: { 'center_x': 0.5 }
-            
+
             AnchorLayout:
                 anchor_x: 'center'
                 anchor_y: 'center'
@@ -67,7 +67,7 @@
                     width: 310
                     size_hint: None, None
                     padding: 0, 30
-                
+
                     Button:
                         text: 'Start'
                         size_hint: None, None
@@ -215,3 +215,28 @@
                 size: 75, 40
                 on_press:
                     display.camera = 1
+    
+    FloatLayout:
+
+        AnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'center'
+
+            FloatLayout:
+                id: workout_select_info_box
+                size_hint: 0.8, 0.8
+                canvas:
+                    Color:
+                        rgb: 0, 0, 0
+                        a: 0.7
+                    RoundedRectangle:
+                        size: self.size
+                        pos: self.pos
+            
+            Label:
+                id: workout_select_info_label
+                font_size: 32
+                text_size: (workout_select_info_box.size[0], None)
+                padding_x: 100
+                halign: 'center'
+                text: "Please use your mobile device to select an exercise."

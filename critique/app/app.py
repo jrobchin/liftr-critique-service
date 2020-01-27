@@ -35,6 +35,8 @@ class DisplayWidget(widget.Widget):
         self.display.allow_stretch = True
         self.add_widget(self.display)
 
+        self.exercise = None
+
         self.bind(
             camera=self.on_camera
         )
@@ -51,6 +53,9 @@ class DisplayWidget(widget.Widget):
         self.error_label = self.parent.parent.ids.error_label
         self.on_camera()
         self.update_loop = Clock.schedule_interval(self.update, 0)
+    
+    def _select_exercise(self, exercise):
+        pass
 
     def on_camera(self, *args):
         if self.cap:
@@ -108,10 +113,17 @@ class MenuScreen(screenmanager.Screen):
         Clock.schedule_once(self.connect, 0)
         
     def connect(self, *args):
-        def _cb():
-            self.ids.session_key_label.text = f"Session Key: {session_service.s_key}"
+        app = App.get_running_app()
         
-        session_service.connect(callback=_cb)
+        def _on_success():
+            self.ids.session_key_label.text = f"Session Key: {session_service.s_key}"
+            app.state['connected'] = True
+        
+        def _on_error():
+            self.ids.session_key_label.text = f"Unable to connect to server..."
+            app.state['connected'] = False
+        
+        session_service.connect(on_success=_on_success, on_error=_on_error)
 
     def _transition_to_display(self):
         self.manager.get_screen('display').ids.display.start()
@@ -135,6 +147,10 @@ screen_manager.add_widget(AboutScreen(name='about'))
 class LiftrApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.state = {
+            'connected': False
+        }
 
     def build(self):
         return screen_manager

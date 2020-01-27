@@ -7,7 +7,7 @@ class State:
         self.start = start
 
 
-class Exersize():
+class Exercise():
     def __init__(self, name):
         self.states = []
     
@@ -22,7 +22,7 @@ class Exersize():
         raise NotImplementedError()
 
 
-class ShoulderPress(Exersize):
+class ShoulderPress(Exercise):
     def __init__(self, name):
         super().__init__(name)
 
@@ -35,7 +35,7 @@ class ShoulderPress(Exersize):
 
 
 class Set():
-    def __init__(self, exercise:Exersize):
+    def __init__(self, exercise:Exercise):
         self.exercise = exercise
     
     def update(self, pose, heuristics):
