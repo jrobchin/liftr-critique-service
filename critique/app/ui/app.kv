@@ -181,7 +181,8 @@
                     root.ids.display.stop()
 
             Label:
-                text: 'Workout: Squats'
+                id: workout_label
+                text: ''
                 size_hint: None, None
                 size: 300, 40
                 text_size: self.size
@@ -198,7 +199,7 @@
             size_hint: 1.0, None
 
             Label:
-                text: "Camera:"
+                text: "Debug:"
                 size: self.texture_size[0] + 20, 40
                 size_hint: None, None
 
@@ -215,6 +216,20 @@
                 size: 75, 40
                 on_press:
                     display.camera = 1
+            
+            Button:
+                text: 'shoulder_press'
+                size_hint: None, None
+                size: 150, 40
+                on_press:
+                    display._select_exercise(self.text)
+            
+            Button:
+                text: 'bicep_curl'
+                size_hint: None, None
+                size: 150, 40
+                on_press:
+                    display._select_exercise(self.text)
     
     FloatLayout:
 

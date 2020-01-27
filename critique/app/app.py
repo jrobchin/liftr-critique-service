@@ -31,33 +31,31 @@ class DisplayWidget(widget.Widget):
         self.cap = None
         self.estimator = PoseEstimator()
 
-        self.display = image.Image()
-        self.display.allow_stretch = True
-        self.add_widget(self.display)
+        self._display = image.Image()
+        self._display.allow_stretch = True
+        self.add_widget(self._display)
 
-        self.exercise = None
+        self._exercise = None
 
         self.bind(
-            camera=self.on_camera
+            camera=self._on_camera
         )
-        self.update_loop = None
+        self._update_loop = None
         
     def start(self):
         Clock.schedule_once(self._on_start, 0)
 
     def stop(self):
-        if self.update_loop is not None:
-            Clock.unschedule(self.update_loop)
+        if self._update_loop is not None:
+            Clock.unschedule(self._update_loop)
 
     def _on_start(self, *args):
-        self.error_label = self.parent.parent.ids.error_label
-        self.on_camera()
-        self.update_loop = Clock.schedule_interval(self.update, 0)
+        screen = App.get_running_app().get_screen()
+        self.error_label = screen.ids.error_label
+        self._on_camera()
+        self._update_loop = Clock.schedule_interval(self.update, 0)
     
-    def _select_exercise(self, exercise):
-        pass
-
-    def on_camera(self, *args):
+    def _on_camera(self, *args):
         if self.cap:
             self.cap.release()
         try:
@@ -67,16 +65,38 @@ class DisplayWidget(widget.Widget):
         
         self.cap = cv2.VideoCapture(camera)
 
+    def _select_exercise(self, exercise):
+        screen = App.get_running_app().get_screen()
+
+        # Notify workout selection
+        screen.ids.workout_label.opacity = 0
+        screen.ids.workout_select_info_box.opacity = 1
+        screen.ids.workout_select_info_label.opacity = 1
+        exercise_label = screen.ids.workout_select_info_label
+        exercise_label.text = f"Workout Selected: {exercise}"
+
+        def _change_workout(dt):
+            # Hide pop up and set workout label
+            screen.ids.workout_label.text = f"Workout: {exercise}"
+            screen.ids.workout_label.opacity = 1
+            screen.ids.workout_select_info_box.opacity = 0
+            screen.ids.workout_select_info_label.opacity = 0
+        
+        Clock.schedule_once(_change_workout, 3)
+    
+    def _start_session(self):
+        pass
+
     def update(self, dt):
         if self.cap:
             ret, frame = self.cap.read()
 
             if ret: 
                 self.error_label.opacity = 0
-                self.display.opacity = 1
+                self._display.opacity = 1
             else:
                 self.error_label.opacity = 1
-                self.display.opacity = 0
+                self._display.opacity = 0
                 return
 
             poses = self.estimator.estimate(frame)
@@ -94,9 +114,9 @@ class DisplayWidget(widget.Widget):
             image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
 
             # display image from the texture
-            self.display.texture = image_texture
-            self.display.size = self.size
-            self.display.pos = self.pos
+            self._display.texture = image_texture
+            self._display.size = self.size
+            self._display.pos = self.pos
 
 class SessionKeyLabel(label.Label):
     s_key = properties.StringProperty()
@@ -154,3 +174,6 @@ class LiftrApp(App):
 
     def build(self):
         return screen_manager
+    
+    def get_screen(self):
+        return self.root.current_screen
