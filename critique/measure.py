@@ -2,10 +2,12 @@ import logging
 from typing import Union
 from statistics import mean
 from math import degrees as deg
+from collections import namedtuple
 
 import cv2
 import numpy as np
 
+from critique import settings
 from critique.utils import midpoint
 from critique.pose.modules.pose import Pose, KEYPOINTS
 
@@ -22,12 +24,13 @@ class HEURISTICS():
     AVG_KNEES   = "AVG_KNEES"
     RIGHT_KNEE  = "RIGHT_KNEE"
     LEFT_KNEE   = "LEFT_KNEE"
-    NECK        = "NECK"
+    SIDE_NECK   = "SIDE_NECK"
 
 def calc_floor_pt(pose:Pose):
     # TODO: depends if they are facing right or left
     return np.int_(midpoint(pose.keypoints[KEYPOINTS.L_ANK], pose.keypoints[KEYPOINTS.R_ANK]))
 
+# TODO: Refactor with *args or **kwargs
 def calc_angle(
         pose:Pose, 
         kpt1:Union[int, tuple, np.ndarray], 
@@ -42,32 +45,43 @@ def calc_angle(
     if they are a tuple, the average of the keypoint positions are taken,
     if they are a numpy array, use the value given.
     """
+
     if isinstance(kpt1, int):
         pt1 = pose.keypoints[kpt1]
+        if pt1[0] == -1:
+            return None
     elif isinstance(kpt1, tuple):
+        if pose.keypoints[kpt1[0]][0] == -1 or pose.keypoints[kpt1[1]][0] == -1:
+            return None
         pt1 = np.int_(midpoint(pose.keypoints[kpt1[0]], pose.keypoints[kpt1[1]]))
     elif isinstance(kpt1, np.ndarray):
         pt1 = kpt1
     else:
-        raise TypeError("kpt1 must be of type int, tuple, or numpy array")
+        raise TypeError(f"kpt1 must be of type int, tuple, or numpy array, not {type(kpt1)}")
 
     if isinstance(kpt2, int):
         pt2 = pose.keypoints[kpt2]
+        if pt2[0] == -1:
+            return None
     elif isinstance(kpt2, tuple):
+        if pose.keypoints[kpt2[0]][0] == -1 or pose.keypoints[kpt2[1]][0] == -1:
+            return None
         pt2 = np.int_(midpoint(pose.keypoints[kpt2[0]], pose.keypoints[kpt2[1]]))
     elif isinstance(kpt2, np.ndarray):
         pt2 = kpt2
     else:
-        raise TypeError("kpt2 must be of type int, tuple, or numpy array")
+        raise TypeError(f"kpt2 must be of type int, tuple, or numpy array, not {type(kpt2)}")
 
     if isinstance(kpt3, int):
         pt3 = pose.keypoints[kpt3]
+        if pt3[0] == -1:
+            return None
     elif isinstance(kpt3, tuple):
+        if pose.keypoints[kpt3[0]][0] == -1 or pose.keypoints[kpt3[1]][0] == -1:
+            return None
         pt3 = np.int_(midpoint(pose.keypoints[kpt3[0]], pose.keypoints[kpt3[1]]))
-    elif isinstance(kpt3, np.ndarray):
-        pt3 = kpt3
     else:
-        raise TypeError("kpt3 must be of type int, tuple, or numpy array")
+        raise TypeError(f"kpt3 must be of type int, tuple, or numpy array, not {type(kpt3)}")
 
     v1 = pt1 - pt2
     v2 = pt3 - pt2
@@ -83,15 +97,6 @@ def calc_angle(
     if degrees:
         return deg(angle)
     return angle
-
-def _avg_hips(pose:Pose, degrees=False):
-    return calc_angle(
-        pose,
-        KEYPOINTS.NECK, 
-        (KEYPOINTS.R_HIP, KEYPOINTS.L_HIP), 
-        (KEYPOINTS.R_KNEE, KEYPOINTS.L_KNEE),
-        degrees
-    )
 
 def _right_hip(pose:Pose, degrees=False):
     return calc_angle(
@@ -110,17 +115,6 @@ def _left_hip(pose:Pose, degrees=False):
         KEYPOINTS.L_KNEE,
         degrees
     )
-
-def _avg_ankles(pose:Pose, degrees=False):
-    floor_pt = calc_floor_pt(pose)
-    return calc_angle(
-        pose,
-        floor_pt, 
-        (KEYPOINTS.R_ANK, KEYPOINTS.L_ANK), 
-        (KEYPOINTS.R_KNEE, KEYPOINTS.L_KNEE),
-        degrees
-    )
-    
 
 def _right_ankle(pose:Pose, degrees=False):
     floor_pt = calc_floor_pt(pose)
@@ -142,15 +136,6 @@ def _left_ankle(pose:Pose, degrees=False):
         degrees
     )
 
-def _avg_elbows(pose:Pose, degrees=False):
-    return calc_angle(
-        pose,
-        (KEYPOINTS.R_SHO, KEYPOINTS.L_SHO), 
-        (KEYPOINTS.R_ELB, KEYPOINTS.L_ELB), 
-        (KEYPOINTS.R_WRI, KEYPOINTS.L_WRI),
-        degrees
-    )
-
 def _right_elbow(pose:Pose, degrees=False):
     return calc_angle(
         pose,
@@ -166,15 +151,6 @@ def _left_elbow(pose:Pose, degrees=False):
         KEYPOINTS.L_SHO, 
         KEYPOINTS.L_ELB, 
         KEYPOINTS.L_WRI,
-        degrees
-    )
-
-def _avg_knees(pose:Pose, degrees=False):
-    return calc_angle(
-        pose,
-        (KEYPOINTS.R_HIP, KEYPOINTS.L_HIP), 
-        (KEYPOINTS.R_KNEE, KEYPOINTS.L_KNEE), 
-        (KEYPOINTS.R_ANK, KEYPOINTS.L_ANK),
         degrees
     )
 
@@ -196,7 +172,7 @@ def _left_knee(pose:Pose, degrees=False):
         degrees
     )
 
-def _neck(pose:Pose, degrees=False):
+def _side_neck(pose:Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.NOSE, 
@@ -205,43 +181,65 @@ def _neck(pose:Pose, degrees=False):
         degrees
     )
 
+# Used to store a relative draw location
+class DrawPosition:
+    def __init__(self, kpt_ids, x_offset=0, y_offset=0): 
+        self._kpt_ids = kpt_ids
+        self._x_offset = x_offset
+        self._y_offset = y_offset
+        
+    def pos(self, pose:Pose):
+        x_pos = mean([
+            pose.keypoints[kpt][0] for kpt in self._kpt_ids
+        ])
+        y_pos = mean([
+            pose.keypoints[kpt][1] for kpt in self._kpt_ids
+        ])
+        return x_pos, y_pos
+
 
 class PoseHeuristics():
     """Class to generate and manage pose heuristics."""
 
+    # Heurisitics calculated using a helper function
     heuristic_funcs = {
-        HEURISTICS.AVG_HIPS: _avg_hips,
         HEURISTICS.RIGHT_HIP: _right_hip,
         HEURISTICS.LEFT_HIP: _left_hip,
-        HEURISTICS.AVG_ANKLES: _avg_ankles,
         HEURISTICS.RIGHT_ANKLE: _right_ankle,
         HEURISTICS.LEFT_ANKLE: _left_ankle,
-        HEURISTICS.AVG_ELBOWS: _avg_elbows,
         HEURISTICS.RIGHT_ELBOW: _right_elbow,
         HEURISTICS.LEFT_ELBOW: _left_elbow,
-        HEURISTICS.AVG_KNEES: _avg_knees,
         HEURISTICS.RIGHT_KNEE: _right_knee,
         HEURISTICS.LEFT_KNEE: _left_knee,
-        HEURISTICS.NECK: _neck
+        HEURISTICS.SIDE_NECK: _side_neck
     }
 
-    draw_locations = {
-        HEURISTICS.AVG_HIPS: (KEYPOINTS.R_HIP, KEYPOINTS.L_HIP),
-        HEURISTICS.RIGHT_HIP: KEYPOINTS.R_HIP,
-        HEURISTICS.LEFT_HIP: KEYPOINTS.L_HIP,
-        HEURISTICS.AVG_ANKLES: (KEYPOINTS.L_ANK, KEYPOINTS.R_ANK),
-        HEURISTICS.RIGHT_ANKLE: KEYPOINTS.R_ANK,
-        HEURISTICS.LEFT_ANKLE: KEYPOINTS.L_ANK,
-        HEURISTICS.AVG_ELBOWS: (KEYPOINTS.L_ELB, KEYPOINTS.R_ELB),
-        HEURISTICS.RIGHT_ELBOW: KEYPOINTS.R_ELB,
-        HEURISTICS.LEFT_ELBOW: KEYPOINTS.L_ELB,
-        HEURISTICS.AVG_KNEES: (KEYPOINTS.L_KNEE, KEYPOINTS.R_KNEE),
-        HEURISTICS.RIGHT_KNEE: KEYPOINTS.R_KNEE,
-        HEURISTICS.LEFT_KNEE: KEYPOINTS.L_KNEE,
-        HEURISTICS.NECK: KEYPOINTS.NECK
+    # Heuristics that use an average of previously computed
+    avg_heuristics = {
+        HEURISTICS.AVG_ANKLES: (HEURISTICS.RIGHT_ANKLE, HEURISTICS.LEFT_ANKLE),
+        HEURISTICS.AVG_ELBOWS: (HEURISTICS.RIGHT_ELBOW, HEURISTICS.LEFT_ELBOW),
+        HEURISTICS.AVG_KNEES: (HEURISTICS.RIGHT_KNEE, HEURISTICS.LEFT_KNEE),
+        HEURISTICS.AVG_HIPS: (HEURISTICS.RIGHT_HIP, HEURISTICS.LEFT_HIP)
+    }
+
+    # Used to compute where to draw the average labels
+    draw_positions = {
+        HEURISTICS.AVG_HIPS: DrawPosition([KEYPOINTS.R_HIP, KEYPOINTS.L_HIP]),
+        HEURISTICS.RIGHT_HIP: DrawPosition([KEYPOINTS.R_HIP]),
+        HEURISTICS.LEFT_HIP: DrawPosition([KEYPOINTS.L_HIP]),
+        HEURISTICS.AVG_ANKLES: DrawPosition([KEYPOINTS.L_ANK, KEYPOINTS.R_ANK]),
+        HEURISTICS.RIGHT_ANKLE: DrawPosition([KEYPOINTS.R_ANK]),
+        HEURISTICS.LEFT_ANKLE: DrawPosition([KEYPOINTS.L_ANK]),
+        HEURISTICS.AVG_ELBOWS: DrawPosition([KEYPOINTS.L_ELB, KEYPOINTS.R_ELB]),
+        HEURISTICS.RIGHT_ELBOW: DrawPosition([KEYPOINTS.R_ELB]),
+        HEURISTICS.LEFT_ELBOW: DrawPosition([KEYPOINTS.L_ELB]),
+        HEURISTICS.AVG_KNEES: DrawPosition([KEYPOINTS.L_KNEE, KEYPOINTS.R_KNEE]),
+        HEURISTICS.RIGHT_KNEE: DrawPosition([KEYPOINTS.R_KNEE]),
+        HEURISTICS.LEFT_KNEE: DrawPosition([KEYPOINTS.L_KNEE]),
+        HEURISTICS.SIDE_NECK: DrawPosition([KEYPOINTS.NECK]),
     }
     
-    def __init__(self, pose:Pose=None, degrees=False):
+    def __init__(self, pose:Pose=None, degrees=settings.DEGREES):
         self.pose = pose
         self.degrees = degrees
 
@@ -251,23 +249,28 @@ class PoseHeuristics():
     
     def _generate_heuristics(self):
         for key, func in self.heuristic_funcs.items():
-            logging.debug((key, func))
             val = func(self.pose, self.degrees)
             if val is not np.nan:
                 self.heuristics[key] = val
             else:
                 self.heuristics[key] = None 
-    
+        
+        for key, kpts in self.avg_heuristics.items():
+            h1 = self.heuristics[kpts[0]]
+            h2 = self.heuristics[kpts[1]]
+
+            if h1 is not None and h2 is not None:
+                val = mean([
+                    self.heuristics[kpts[0]],
+                    self.heuristics[kpts[1]]
+                ])
+            else:
+                val = None
+            self.heuristics[key] = val
+
     def draw(self, img):
         for key, val in self.heuristics.items():
             if val is not None:
-                draw_keypoint = self.draw_locations[key]
-                if isinstance(draw_keypoint, tuple):
-                    draw_pos = np.int_(midpoint(
-                                self.pose.keypoints[draw_keypoint[0]], 
-                                self.pose.keypoints[draw_keypoint[1]]
-                               ))
-                else:
-                    draw_pos = self.pose.keypoints[draw_keypoint]
-                draw_pos = tuple(draw_pos.tolist())
+                dp = self.draw_positions[key]
+                draw_pos = dp.pos(self.pose)
                 cv2.putText(img, f"{key} {val:.2f}", draw_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255))

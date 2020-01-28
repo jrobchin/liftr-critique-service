@@ -9,14 +9,8 @@ class State:
 
 class Exercise():
     def __init__(self, name):
-        self.states = []
-    
-    def _add_state(self, name, criteria):
-        start = False
-        if len(self.states) == 0:
-            start = True
-        state = State(name, criteria, start)
-        self.states.append(state)
+        self.states = {}
+        self.trasitions = {}
 
     def update(self, pose, heuristics):
         raise NotImplementedError()
@@ -25,10 +19,6 @@ class Exercise():
 class ShoulderPress(Exercise):
     def __init__(self, name):
         super().__init__(name)
-
-        self._add_state('Up', {
-            HEURISTICS.AVG_ELBOWS: None
-        })
 
     def update(self, pose, heuristics):
         pass

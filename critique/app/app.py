@@ -1,3 +1,6 @@
+import uuid
+import logging
+
 import kivy
 kivy.require('1.11.1')
 from kivy.app import App
@@ -9,6 +12,8 @@ from kivy.core.window import Window
 from kivy.graphics.texture import Texture
 import cv2
 import socketio
+import boto3
+from botocore.exceptions import ClientError
 
 from critique import settings
 from critique.io import VideoReader
@@ -19,7 +24,7 @@ from critique.pose.estimator import PoseEstimator
 
 from kivy.config import Config
 
-# Window.maximize()
+Window.maximize()
 
 Builder.load_file(get_kv_file('app'))
 
@@ -28,19 +33,22 @@ class DisplayWidget(widget.Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.cap = None
-        self.estimator = PoseEstimator()
-
+        self._cap = None
+        self._curr_frame = None
+        self._estimator = PoseEstimator()
+        self._exercise = None
+        self._update_loop = None
+ 
         self._display = image.Image()
         self._display.allow_stretch = True
         self.add_widget(self._display)
 
-        self._exercise = None
+        session_service.bind('select_exercise', lambda d: self._select_exercise(d['exercise']))
+        session_service.bind('start_exercise', lambda d: self._start_exercise(d['reps']))
 
         self.bind(
             camera=self._on_camera
         )
-        self._update_loop = None
         
     def start(self):
         Clock.schedule_once(self._on_start, 0)
@@ -56,16 +64,18 @@ class DisplayWidget(widget.Widget):
         self._update_loop = Clock.schedule_interval(self.update, 0)
     
     def _on_camera(self, *args):
-        if self.cap:
-            self.cap.release()
+        if self._cap:
+            self._cap.release()
         try:
             camera = int(self.camera)
         except ValueError:
             camera = self.camera
         
-        self.cap = cv2.VideoCapture(camera)
+        self._cap = cv2.VideoCapture(camera)
 
     def _select_exercise(self, exercise):
+        self._exercise = exercise
+
         screen = App.get_running_app().get_screen()
 
         # Notify workout selection
@@ -82,14 +92,60 @@ class DisplayWidget(widget.Widget):
             screen.ids.workout_select_info_box.opacity = 0
             screen.ids.workout_select_info_label.opacity = 0
         
-        Clock.schedule_once(_change_workout, 3)
+        Clock.schedule_once(_change_workout, 1.5)
     
-    def _start_session(self):
-        pass
+    def _start_exercise(self, reps):
+        screen = App.get_running_app().get_screen()
+        
+        def _count_down(n, callback):
+            def _animation(n):
+                screen.ids.count_down_label.text = str(n)
+
+                screen.ids.count_down_box.opacity = 1
+                screen.ids.count_down_label.opacity = 1
+
+                n -= 1
+
+                if n < 0:
+                    _after()
+                else:
+                    Clock.schedule_once(lambda _: _animation(n), 1)
+
+            def _after():
+                screen.ids.count_down_box.opacity = 0
+                screen.ids.count_down_label.opacity = 0
+                callback()
+            
+            Clock.schedule_once(lambda _: _animation(n), 0)
+
+        _count_down(3, lambda: print('starting exercise'))
+
+    def _send_critique(self):
+        # Upload screenshot
+        tmp_fpath = 'tmp/tmp.jpg'
+        cv2.imwrite(tmp_fpath, self._curr_frame)
+        s3 = boto3.client('s3')
+        try:
+            obj_name = uuid.uuid4().hex + ".jpg"
+            response = s3.upload_file(tmp_fpath, settings.S3_BUCKET_NAME, obj_name, ExtraArgs={'ACL':'public-read'})
+        except ClientError:
+            logging.error("Error uploading to S3.")
+        
+        # Send critique to app
+        session_service.emit('make_critique', {
+            "exercise": self._exercise,
+            "caption": "This is a test caption.",
+            "image": f"{settings.S3_BUCKET_DOMAIN}/{obj_name}"
+        })
+    
+    def _update_rep_counter(self, reps):
+        session_service.emit('update_reps', { "reps": reps })
 
     def update(self, dt):
-        if self.cap:
-            ret, frame = self.cap.read()
+        if self._cap:
+            ret, frame = self._cap.read()
+            frame = cv2.flip(frame, 1)
+            self._curr_frame = frame.copy()
 
             if ret: 
                 self.error_label.opacity = 0
@@ -99,7 +155,7 @@ class DisplayWidget(widget.Widget):
                 self._display.opacity = 0
                 return
 
-            poses = self.estimator.estimate(frame)
+            poses = self._estimator.estimate(frame)
             for pose in poses:
                 pose.draw(frame)
                 pose = pose.get_kpt_group()

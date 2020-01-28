@@ -230,6 +230,21 @@
                 size: 150, 40
                 on_press:
                     display._select_exercise(self.text)
+            
+            Button:
+                text: 'start_exercise'
+                size_hint: None, None
+                size: 150, 40
+                on_press:
+                    display._start_exercise()
+            
+            Button:
+                text: 'test_critique'
+                size_hint: None, None
+                size: 150, 40
+                on_press:
+                    display._send_critique()
+            
     
     FloatLayout:
 
@@ -255,3 +270,25 @@
                 padding_x: 100
                 halign: 'center'
                 text: "Please use your mobile device to select an exercise."
+
+            FloatLayout:
+                id: count_down_box
+                opacity: 0
+                size_hint: None, None
+                size: 200, 225
+                canvas:
+                    Color:
+                        rgb: 1, 1, 1
+                        a: 0.7
+                    RoundedRectangle:
+                        size: self.size
+                        pos: self.pos
+            
+            Label:
+                id: count_down_label
+                opacity: 0
+                font_size: 64
+                text_size: (count_down_box.size[0], None)
+                color: 208/255, 0, 0, 1
+                halign: 'center'
+                text: "3"

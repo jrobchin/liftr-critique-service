@@ -26,3 +26,10 @@ CHECKPOINT_PATH = os.path.join(BASE_DIR, 'pose/checkpoint_iter_370000.pth')
 
 BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN')
 DISABLE_NET = get_env_bool('DISABLE_NET')
+DEGREES = get_env_bool('DEGREES')
+
+S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
+S3_BUCKET_DOMAIN = os.getenv('S3_BUCKET_DOMAIN')
+AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION')
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')

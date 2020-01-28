@@ -48,6 +48,8 @@ class __SessionService__:
     
     def bind(self, event, func):
         self.client.on(event, func)
-        
+    
+    def emit(self, event, data, callback=None):
+        self.client.emit(event, data)        
 
 session_service = __SessionService__()

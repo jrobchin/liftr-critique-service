@@ -12,3 +12,4 @@ click
 redis
 flower
 kivy
+boto3
