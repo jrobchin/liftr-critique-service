@@ -145,9 +145,9 @@ class DisplayWidget(widget.Widget):
         if self._cap:
             ret, frame = self._cap.read()
             frame = cv2.flip(frame, 1)
-            self._curr_frame = frame.copy()
 
             if ret: 
+                self._curr_frame = frame.copy()
                 self.error_label.opacity = 0
                 self._display.opacity = 1
             else:
