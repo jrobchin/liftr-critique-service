@@ -1,3 +1,4 @@
+import os
 import uuid
 import logging
 
@@ -21,6 +22,7 @@ from critique.app import get_kv_file
 from critique.app.services import session_service
 from critique.measure import PoseHeuristics
 from critique.pose.estimator import PoseEstimator
+from critique.app.exercise import ShoulderPress
 
 from kivy.config import Config
 
@@ -29,15 +31,19 @@ Window.maximize()
 Builder.load_file(get_kv_file('app'))
 
 class DisplayWidget(widget.Widget):
-    camera = properties.NumericProperty(1)
+    camera = properties.StringProperty('1')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._cap = None
         self._curr_frame = None
         self._estimator = PoseEstimator()
-        self._exercise = None
+        self._heuristics = PoseHeuristics()
+        self._exercise = ShoulderPress()
+        self._critiques_given = set()
+        self._reps = 0
         self._update_loop = None
+        self._started = False
  
         self._display = image.Image()
         self._display.allow_stretch = True
@@ -56,6 +62,17 @@ class DisplayWidget(widget.Widget):
     def stop(self):
         if self._update_loop is not None:
             Clock.unschedule(self._update_loop)
+        
+    def reset(self):
+        self._cap = None
+        self._curr_frame = None
+        self._estimator = PoseEstimator()
+        self._heuristics = PoseHeuristics()
+        self._exercise = ShoulderPress()
+        self._critiques_given = set()
+        self._update_loop = None
+        self._started = False
+        self._reps = 0
 
     def _on_start(self, *args):
         screen = App.get_running_app().get_screen()
@@ -66,15 +83,19 @@ class DisplayWidget(widget.Widget):
     def _on_camera(self, *args):
         if self._cap:
             self._cap.release()
+
         try:
             camera = int(self.camera)
+            self._cap = cv2.VideoCapture(camera)
         except ValueError:
-            camera = self.camera
-        
-        self._cap = cv2.VideoCapture(camera)
 
+            if isinstance(self.camera, str):
+                # File path given, get path to file in res folder
+                camera = os.path.join(settings.RES_DIR, self.camera)
+                self._cap = cv2.VideoCapture(camera)
+        
     def _select_exercise(self, exercise):
-        self._exercise = exercise
+        # self._exercise = exercise
 
         screen = App.get_running_app().get_screen()
 
@@ -118,12 +139,19 @@ class DisplayWidget(widget.Widget):
             
             Clock.schedule_once(lambda _: _animation(n), 0)
 
-        _count_down(3, lambda: print('starting exercise'))
+        def _cb():
+            self._started = True
+            screen.ids.started_value_label.text = "True"
 
-    def _send_critique(self):
+        _count_down(3, _cb)
+
+    def _send_critique(self, critique, frame=None):
+        if frame is None:
+            frame = self._curr_frame
+
         # Upload screenshot
         tmp_fpath = 'tmp/tmp.jpg'
-        cv2.imwrite(tmp_fpath, self._curr_frame)
+        cv2.imwrite(tmp_fpath, frame)
         s3 = boto3.client('s3')
         try:
             obj_name = uuid.uuid4().hex + ".jpg"
@@ -133,16 +161,21 @@ class DisplayWidget(widget.Widget):
         
         # Send critique to app
         session_service.emit('make_critique', {
-            "exercise": self._exercise,
-            "caption": "This is a test caption.",
+            "exercise": self._exercise.name,
+            "caption": critique[1],
             "image": f"{settings.S3_BUCKET_DOMAIN}/{obj_name}"
         })
+
+        screen = App.get_running_app().get_screen()
+        screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
     
     def _update_rep_counter(self, reps):
         session_service.emit('update_reps', { "reps": reps })
 
     def update(self, dt):
         if self._cap:
+            if self._curr_frame is not None:
+                prev_frame = self._curr_frame.copy()
             ret, frame = self._cap.read()
             frame = cv2.flip(frame, 1)
 
@@ -155,12 +188,21 @@ class DisplayWidget(widget.Widget):
                 self._display.opacity = 0
                 return
 
-            poses = self._estimator.estimate(frame)
-            for pose in poses:
+            state = ''
+            try:
+                pose = self._estimator.estimate(frame)[0]
                 pose.draw(frame)
                 pose = pose.get_kpt_group()
-                ph = PoseHeuristics(pose)
-                ph.draw(frame)
+                self._heuristics.update(pose)
+                if self._started:
+                    state, critiques = self._exercise.update(pose, self._heuristics)
+                    for critique in critiques:
+                        if critique[0] not in self._critiques_given:
+                            self._send_critique(critique, prev_frame)
+                            self._critiques_given.add(critique[0])
+                self._heuristics.draw(frame)
+            except IndexError:
+                pass
 
             # convert it to texture
             buf1 = cv2.flip(frame, 0)
@@ -173,6 +215,15 @@ class DisplayWidget(widget.Widget):
             self._display.texture = image_texture
             self._display.size = self.size
             self._display.pos = self.pos
+
+            # set state label text and update reps
+            if self._started:
+                screen = App.get_running_app().get_screen()
+                screen.ids.state_value_label.text = state
+                screen.ids.rep_value_label.text = str(self._exercise.reps)
+                # if self._exercise.reps > self._reps:
+                #     self._reps = self._exercise.reps
+                #     self._update_rep_counter(self._exercise.reps)
 
 class SessionKeyLabel(label.Label):
     s_key = properties.StringProperty()

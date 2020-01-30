@@ -1,4 +1,6 @@
 #:kivy 1.11
+#:import settings critique.settings
+
 <Widget>:
     # canvas:
     #     Rectangle:
@@ -166,6 +168,7 @@
     BoxLayout:
         orientation:'vertical'
 
+        # Top Bar
         BoxLayout:
             orientation: 'horizontal'
             height: 40
@@ -189,10 +192,12 @@
                 padding_x: 20
                 valign: 'middle'
 
+        # Main Display
         DisplayWidget:
             id: display
-            camera: 0
+            camera: settings.DEFAULT_CAMERA
 
+        # Debug Bar
         BoxLayout:
             orientation: 'horizontal'
             height: 40
@@ -204,18 +209,32 @@
                 size_hint: None, None
 
             Button:
+                text: 'RESET'
+                size_hint: None, None
+                size: 75, 40
+                on_press:
+                    display.reset()
+
+            Button:
                 text: '0'
                 size_hint: None, None
                 size: 75, 40
                 on_press:
-                    display.camera = 0
+                    display.camera = '0'
             
             Button:
                 text: '1'
                 size_hint: None, None
                 size: 75, 40
                 on_press:
-                    display.camera = 1
+                    display.camera = '1'
+            
+            Button:
+                text: 'test_sp'
+                size_hint: None, None
+                size: 75, 40
+                on_press:
+                    display.camera = 'ohsp.mp4'
             
             Button:
                 text: 'shoulder_press'
@@ -236,16 +255,60 @@
                 size_hint: None, None
                 size: 150, 40
                 on_press:
-                    display._start_exercise()
+                    display._start_exercise(10)
             
             Button:
                 text: 'test_critique'
                 size_hint: None, None
                 size: 150, 40
                 on_press:
-                    display._send_critique()
+                    display._send_critique(('test', 'this is a test critique'))
             
-    
+            Label:
+                text: "Started:"
+                size: self.texture_size[0] + 20, 40
+                size_hint: None, None
+
+            Label:
+                id: started_value_label
+                text: "False"
+                size: 100, 40
+                size_hint: None, None
+
+            Label:
+                text: "State:"
+                size: self.texture_size[0] + 20, 40
+                size_hint: None, None
+            
+            Label:
+                id: state_value_label
+                text: ""
+                size: 100, 40
+                size_hint: None, None
+            
+            Label:
+                text: "Reps:"
+                size: self.texture_size[0] + 20, 40
+                size_hint: None, None
+            
+            Label:
+                id: rep_value_label
+                text: ""
+                size: 100, 40
+                size_hint: None, None
+            
+            Label:
+                text: "Critiques:"
+                size: self.texture_size[0] + 20, 40
+                size_hint: None, None
+            
+            Label:
+                id: critique_count_value_label
+                text: ""
+                size: 100, 40
+                size_hint: None, None
+            
+    # Overlay
     FloatLayout:
 
         AnchorLayout:

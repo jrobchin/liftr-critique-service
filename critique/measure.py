@@ -1,5 +1,6 @@
 import logging
-from typing import Union
+from typing import Union, Dict
+import statistics
 from statistics import mean
 from math import degrees as deg
 from collections import namedtuple
@@ -24,7 +25,17 @@ class HEURISTICS():
     AVG_KNEES   = "AVG_KNEES"
     RIGHT_KNEE  = "RIGHT_KNEE"
     LEFT_KNEE   = "LEFT_KNEE"
+    AVG_SHLDRS   = "AVG_SHLDRS"
+    RIGHT_SHLDR  = "RIGHT_SHLDR"
+    LEFT_SHLDR   = "LEFT_SHLDR"
     SIDE_NECK   = "SIDE_NECK"
+
+class MV_DIRECTIONS:
+    HOLD = 'HOLD'
+    UP = 'UP'
+    DOWN = 'DOWN'
+    LEFT = 'LEFT'
+    RIGHT = 'RIGHT'
 
 def calc_floor_pt(pose:Pose):
     # TODO: depends if they are facing right or left
@@ -172,6 +183,24 @@ def _left_knee(pose:Pose, degrees=False):
         degrees
     )
 
+def _right_shldr(pose:Pose, degrees=False):
+    return calc_angle(
+        pose,
+        KEYPOINTS.NECK,
+        KEYPOINTS.R_SHO,
+        KEYPOINTS.R_ELB, 
+        degrees
+    )
+
+def _left_shldr(pose:Pose, degrees=False):
+    return calc_angle(
+        pose,
+        KEYPOINTS.NECK, 
+        KEYPOINTS.L_SHO,
+        KEYPOINTS.L_ELB,
+        degrees
+    )
+
 def _side_neck(pose:Pose, degrees=False):
     return calc_angle(
         pose,
@@ -191,11 +220,64 @@ class DrawPosition:
     def pos(self, pose:Pose):
         x_pos = mean([
             pose.keypoints[kpt][0] for kpt in self._kpt_ids
-        ])
+        ]) + self._x_offset
         y_pos = mean([
             pose.keypoints[kpt][1] for kpt in self._kpt_ids
-        ])
+        ]) + self._y_offset
         return x_pos, y_pos
+
+
+class MovementVector:
+    def __init__(self, kpt_id, hold_thresh=settings.MV_HOLD_THRESH, len_history=settings.MV_HISTORY):
+        self._kpt_id = kpt_id
+        self._x_history = []
+        self._y_history = []
+        self._hold_thresh = hold_thresh
+        self._len_history = len_history
+
+        self.x = MV_DIRECTIONS.HOLD
+        self.y = MV_DIRECTIONS.HOLD
+    
+    def update(self, pose:Pose):
+        kpt = pose.keypoints[self._kpt_id]
+
+        if kpt[0] == -1:
+            return False
+        
+        try:
+            x_mean = mean(self._x_history)
+            y_mean = mean(self._y_history)
+        except statistics.StatisticsError:
+            x_mean = kpt[0]
+            y_mean = kpt[1]
+
+        x_diff = x_mean - kpt[0]
+        y_diff = y_mean - kpt[1]
+
+        if x_diff > 0 and abs(x_diff) > self._hold_thresh:
+            self.x = MV_DIRECTIONS.RIGHT
+        elif x_diff < 0 and abs(x_diff) > self._hold_thresh:
+            self.x = MV_DIRECTIONS.LEFT
+        else:
+            self.x = MV_DIRECTIONS.HOLD
+        
+        if y_diff > 0 and abs(y_diff) > self._hold_thresh:
+            self.y = MV_DIRECTIONS.UP
+        elif y_diff < 0 and abs(y_diff) > self._hold_thresh:
+            self.y = MV_DIRECTIONS.DOWN
+        else:
+            self.y = MV_DIRECTIONS.HOLD
+
+        self._x_history.append(kpt[0])
+        self._y_history.append(kpt[1])
+
+        if len(self._x_history) > self._len_history:
+            self._x_history.pop(0)
+
+        if len(self._y_history) > self._len_history:
+            self._y_history.pop(0)
+
+        return True
 
 
 class PoseHeuristics():
@@ -211,6 +293,8 @@ class PoseHeuristics():
         HEURISTICS.LEFT_ELBOW: _left_elbow,
         HEURISTICS.RIGHT_KNEE: _right_knee,
         HEURISTICS.LEFT_KNEE: _left_knee,
+        HEURISTICS.RIGHT_SHLDR: _right_shldr,
+        HEURISTICS.LEFT_SHLDR: _left_shldr,
         HEURISTICS.SIDE_NECK: _side_neck
     }
 
@@ -219,37 +303,45 @@ class PoseHeuristics():
         HEURISTICS.AVG_ANKLES: (HEURISTICS.RIGHT_ANKLE, HEURISTICS.LEFT_ANKLE),
         HEURISTICS.AVG_ELBOWS: (HEURISTICS.RIGHT_ELBOW, HEURISTICS.LEFT_ELBOW),
         HEURISTICS.AVG_KNEES: (HEURISTICS.RIGHT_KNEE, HEURISTICS.LEFT_KNEE),
-        HEURISTICS.AVG_HIPS: (HEURISTICS.RIGHT_HIP, HEURISTICS.LEFT_HIP)
+        HEURISTICS.AVG_HIPS: (HEURISTICS.RIGHT_HIP, HEURISTICS.LEFT_HIP),
+        HEURISTICS.AVG_SHLDRS: (HEURISTICS.RIGHT_SHLDR, HEURISTICS.LEFT_SHLDR)
     }
 
     # Used to compute where to draw the average labels
-    draw_positions = {
+    heuristics_draw_positions = {
         HEURISTICS.AVG_HIPS: DrawPosition([KEYPOINTS.R_HIP, KEYPOINTS.L_HIP]),
-        HEURISTICS.RIGHT_HIP: DrawPosition([KEYPOINTS.R_HIP]),
-        HEURISTICS.LEFT_HIP: DrawPosition([KEYPOINTS.L_HIP]),
+        HEURISTICS.RIGHT_HIP: DrawPosition([KEYPOINTS.R_HIP], y_offset=-20),
+        HEURISTICS.LEFT_HIP: DrawPosition([KEYPOINTS.L_HIP], y_offset=-20),
         HEURISTICS.AVG_ANKLES: DrawPosition([KEYPOINTS.L_ANK, KEYPOINTS.R_ANK]),
         HEURISTICS.RIGHT_ANKLE: DrawPosition([KEYPOINTS.R_ANK]),
         HEURISTICS.LEFT_ANKLE: DrawPosition([KEYPOINTS.L_ANK]),
         HEURISTICS.AVG_ELBOWS: DrawPosition([KEYPOINTS.L_ELB, KEYPOINTS.R_ELB]),
-        HEURISTICS.RIGHT_ELBOW: DrawPosition([KEYPOINTS.R_ELB]),
-        HEURISTICS.LEFT_ELBOW: DrawPosition([KEYPOINTS.L_ELB]),
+        HEURISTICS.RIGHT_ELBOW: DrawPosition([KEYPOINTS.R_ELB], y_offset=-20),
+        HEURISTICS.LEFT_ELBOW: DrawPosition([KEYPOINTS.L_ELB], y_offset=20),
         HEURISTICS.AVG_KNEES: DrawPosition([KEYPOINTS.L_KNEE, KEYPOINTS.R_KNEE]),
         HEURISTICS.RIGHT_KNEE: DrawPosition([KEYPOINTS.R_KNEE]),
         HEURISTICS.LEFT_KNEE: DrawPosition([KEYPOINTS.L_KNEE]),
+        HEURISTICS.AVG_SHLDRS: DrawPosition([KEYPOINTS.L_SHO, KEYPOINTS.R_SHO], y_offset=-30),
+        HEURISTICS.RIGHT_SHLDR: DrawPosition([KEYPOINTS.R_SHO], x_offset=-50, y_offset=-20),
+        HEURISTICS.LEFT_SHLDR: DrawPosition([KEYPOINTS.L_SHO], x_offset=50, y_offset=20),
         HEURISTICS.SIDE_NECK: DrawPosition([KEYPOINTS.NECK]),
     }
-    
+
     def __init__(self, pose:Pose=None, degrees=settings.DEGREES):
-        self.pose = pose
+        self._curr_pose = pose
         self.degrees = degrees
 
-        self.heuristics = {}
-        if pose is not None:
-            self._generate_heuristics()
+        self.heuristics: Dict[str, float] = {} # TODO: refactor to angles
+        self.movement_vectors: Dict[int, MovementVector] = {kpt: MovementVector(kpt) for kpt in KEYPOINTS.all()}
+
+        self.update(pose)
     
-    def _generate_heuristics(self):
+    def _update_heuristics(self, pose:Pose=None):
+        if pose is None:
+            pose = self._curr_pose
+        
         for key, func in self.heuristic_funcs.items():
-            val = func(self.pose, self.degrees)
+            val = func(self._curr_pose, self.degrees)
             if val is not np.nan:
                 self.heuristics[key] = val
             else:
@@ -267,10 +359,35 @@ class PoseHeuristics():
             else:
                 val = None
             self.heuristics[key] = val
+    
+    def _update_movement_vectors(self, pose:Pose=None):
+        if pose is None:
+            pose = self._curr_pose
+
+        for key, mv in self.movement_vectors.items():
+            mv.update(pose)
+
+    def update(self, pose:Pose):
+        self._curr_pose = pose
+        if self._curr_pose is not None:
+            self._update_heuristics()
+            self._update_movement_vectors()
 
     def draw(self, img):
         for key, val in self.heuristics.items():
             if val is not None:
-                dp = self.draw_positions[key]
-                draw_pos = dp.pos(self.pose)
+                dp = self.heuristics_draw_positions[key]
+                draw_pos = dp.pos(self._curr_pose)
                 cv2.putText(img, f"{key} {val:.2f}", draw_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255))
+        
+        for key, mv in self.movement_vectors.items():
+            dp = self._curr_pose.keypoints[key]
+            if dp[0] != -1:
+                cv2.putText(img, f"{mv.x}", (dp[0], dp[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255))
+                cv2.putText(img, f"{mv.y}", (dp[0], dp[1]+40), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255))
+
+    def get_angle(self, heuristic_id:int):
+        return self.heuristics[heuristic_id]
+    
+    def get_movement(self, kpt_id:int):
+        return self.movement_vectors[kpt_id]

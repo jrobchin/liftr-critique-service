@@ -22,11 +22,16 @@ def get_env_bool(name):
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
+RES_DIR = os.path.join(os.path.dirname(BASE_DIR), 'res')
+
 CHECKPOINT_PATH = os.path.join(BASE_DIR, 'pose/checkpoint_iter_370000.pth')
+DEFAULT_CAMERA = os.getenv('DEFAULT_CAMERA')
 
 BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN')
 DISABLE_NET = get_env_bool('DISABLE_NET')
 DEGREES = get_env_bool('DEGREES')
+MV_HISTORY = 10
+MV_HOLD_THRESH = 15
 
 S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 S3_BUCKET_DOMAIN = os.getenv('S3_BUCKET_DOMAIN')
