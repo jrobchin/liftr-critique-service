@@ -221,9 +221,9 @@ class DisplayWidget(widget.Widget):
                 screen = App.get_running_app().get_screen()
                 screen.ids.state_value_label.text = state
                 screen.ids.rep_value_label.text = str(self._exercise.reps)
-                # if self._exercise.reps > self._reps:
-                #     self._reps = self._exercise.reps
-                #     self._update_rep_counter(self._exercise.reps)
+                if self._exercise.reps > self._reps:
+                    self._reps = self._exercise.reps
+                    self._update_rep_counter(self._exercise.reps)
 
 class SessionKeyLabel(label.Label):
     s_key = properties.StringProperty()
