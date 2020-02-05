@@ -103,7 +103,8 @@ def calc_angle(
     if norm_v1 == 0 or norm_v2 == 0:
         return None
 
-    angle = np.arccos(v1.dot(v2) / (norm_v1 * norm_v2))
+    # angle = np.arccos(v1.dot(v2) / (norm_v1 * norm_v2))
+    angle = np.arcsin(np.cross(v1, v2) / (norm_v1 * norm_v2))
 
     if degrees:
         return deg(angle)
