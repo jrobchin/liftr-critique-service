@@ -60,6 +60,40 @@
                 size: self.texture_size
                 font_size: 81
                 font_name: 'critique/app/assets/fonts/HelveticaNeueHv.ttf'
+        
+        AnchorLayout:
+            anchor_x: 'right'
+            anchor_y: 'top'
+
+            StackLayout:
+                orientation: 'rl-tb'
+                spacing: 20, 0
+
+                Label:
+                    text: "11:05AM"
+                    size_hint: None, None
+                    size: self.texture_size
+                    color: 1, 1, 1, 1
+                    font_size: 36
+                    font_name: 'critique/app/assets/fonts/HelveticaNeue Light.ttf'
+                
+                Widget:
+                    canvas:
+                        Rectangle:
+                            size: self.size
+                            pos: self.pos
+                            source: 'critique/app/assets/weather-icons/cloudy.png'
+                    size: 40, 40
+                    size_hint: None, None
+                
+                Label:
+                    text: "23°C"
+                    markdown: True
+                    size_hint: None, None
+                    size: self.texture_size
+                    color: 1, 1, 1, 1
+                    font_size: 36
+                    font_name: 'critique/app/assets/fonts/HelveticaNeue Light.ttf'
 
 <AboutScreen>:
     FloatLayout:
