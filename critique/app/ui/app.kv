@@ -42,12 +42,21 @@
             anchor_x: 'center'
             anchor_y: 'center'
 
-            SessionKeyLabel:
-                id: session_key_label
-                size_hint: 1.0, None
-                color: 1, 1, 1, 1
-                font_size: 600
-                pos_hint: { 'center_x': 0.5 }
+            FloatLayout:
+
+                SessionKeyLabel:
+                    id: session_key_label
+                    size_hint: 1.0, 1.0
+                    color: 1, 1, 1, 1
+                    font_size: 600
+                
+                Label:
+                    text: "Enter the code above into your device to begin."
+                    size_hint: 1.0, None
+                    color: 1, 1, 1, 1
+                    font_size: 32
+                    y: 200
+                    font_name: 'critique/app/assets/fonts/HelveticaNeue Light.ttf'
         
         AnchorLayout:
             anchor_x: 'left'
@@ -70,6 +79,7 @@
                 spacing: 20, 0
 
                 Label:
+                    id: time_label
                     text: "11:05AM"
                     size_hint: None, None
                     size: self.texture_size
@@ -87,6 +97,7 @@
                     size_hint: None, None
                 
                 Label:
+                    id: weather_label
                     text: "23°C"
                     markdown: True
                     size_hint: None, None

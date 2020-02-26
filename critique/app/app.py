@@ -1,6 +1,7 @@
 import os
 import uuid
 import logging
+import datetime
 
 import kivy
 kivy.require('1.11.1')
@@ -238,6 +239,9 @@ class MenuScreen(screenmanager.Screen):
         session_service.bind('start_session', lambda _: self._transition_to_display())
 
         Clock.schedule_once(self.connect, 0)
+
+        self._update_hud()
+        Clock.schedule_interval(self._update_hud, 60)
         
     def connect(self, *args):
         app = App.get_running_app()
@@ -247,7 +251,7 @@ class MenuScreen(screenmanager.Screen):
             app.state['connected'] = True
         
         def _on_error():
-            self.ids.session_key_label.text = f"Unable to connect to server..."
+            self.ids.session_key_label.text = "Error"
             app.state['connected'] = False
         
         session_service.connect(on_success=_on_success, on_error=_on_error)
@@ -259,6 +263,12 @@ class MenuScreen(screenmanager.Screen):
 
     def _transition_to_about(self):
         pass
+
+    def _update_hud(self, dt=None):
+        # Update time and weather
+        now = datetime.datetime.now()
+        self.ids.time_label.text = now.strftime('%I:%M%p')
+
 
 class DisplayScreen(screenmanager.Screen):
     pass
