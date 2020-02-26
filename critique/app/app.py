@@ -4,6 +4,8 @@ import logging
 
 import kivy
 kivy.require('1.11.1')
+from kivy.config import Config
+Config.set('graphics', 'borderless', '1')
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix import label, button, widget, boxlayout, screenmanager, image
@@ -23,8 +25,6 @@ from critique.app.services import session_service
 from critique.measure import PoseHeuristics
 from critique.pose.estimator import PoseEstimator
 from critique.app.exercise import ShoulderPress
-
-from kivy.config import Config
 
 Window.maximize()
 
@@ -243,7 +243,7 @@ class MenuScreen(screenmanager.Screen):
         app = App.get_running_app()
         
         def _on_success():
-            self.ids.session_key_label.text = f"Session Key: {session_service.s_key}"
+            self.ids.session_key_label.text = f"{session_service.s_key}"
             app.state['connected'] = True
         
         def _on_error():
