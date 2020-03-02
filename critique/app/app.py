@@ -18,6 +18,7 @@ import cv2
 import socketio
 import boto3
 from botocore.exceptions import ClientError
+import requests
 
 from critique import settings
 from critique.io import VideoReader
@@ -265,9 +266,19 @@ class MenuScreen(screenmanager.Screen):
         pass
 
     def _update_hud(self, dt=None):
-        # Update time and weather
+        # Update time
         now = datetime.datetime.now()
-        self.ids.time_label.text = now.strftime('%I:%M%p')
+        self.ids.time_label.text = f"{now.strftime('%I:%M%p')}"
+
+        # Update weather
+        res = requests.get("https://api.openweathermap.org/data/2.5/weather?""units=metric&" + \
+                          f"id={settings.OWM_CITY_ID}&appid={settings.OWM_API_KEY}")
+        if res.status_code == 200:
+            data = res.json()
+            self.ids.weather_label.text = f"{data['weather'][0]['main']} {data['main']['temp']:.0f}°C"
+        else:
+            self.ids.weather_label.text = ""
+
 
 
 class DisplayScreen(screenmanager.Screen):
