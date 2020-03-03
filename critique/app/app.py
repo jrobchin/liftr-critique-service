@@ -26,7 +26,7 @@ from critique.app import get_kv_file
 from critique.app.services import session_service
 from critique.measure import PoseHeuristics
 from critique.pose.estimator import PoseEstimator
-from critique.app.exercise import ShoulderPress
+from critique.app.exercise import Critique, ShoulderPress
 
 Window.maximize()
 
@@ -147,7 +147,7 @@ class DisplayWidget(widget.Widget):
 
         _count_down(3, _cb)
 
-    def _send_critique(self, critique, frame=None):
+    def _send_critique(self, critique:Critique, frame=None):
         if frame is None:
             frame = self._curr_frame
 
@@ -164,7 +164,30 @@ class DisplayWidget(widget.Widget):
         # Send critique to app
         session_service.emit('make_critique', {
             "exercise": self._exercise.name,
-            "caption": critique[1],
+            "caption": critique.msg,
+            "image": f"{settings.S3_BUCKET_DOMAIN}/{obj_name}"
+        })
+
+        screen = App.get_running_app().get_screen()
+        screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
+    
+    def _test_critique(self):
+        frame = self._curr_frame
+
+        # Upload screenshot
+        tmp_fpath = 'tmp/tmp.jpg'
+        cv2.imwrite(tmp_fpath, frame)
+        s3 = boto3.client('s3')
+        try:
+            obj_name = uuid.uuid4().hex + ".jpg"
+            response = s3.upload_file(tmp_fpath, settings.S3_BUCKET_NAME, obj_name, ExtraArgs={'ACL':'public-read'})
+        except ClientError:
+            logging.error("Error uploading to S3.")
+        
+        # Send critique to app
+        session_service.emit('make_critique', {
+            "exercise": self._exercise.name,
+            "caption": 'test_critique',
             "image": f"{settings.S3_BUCKET_DOMAIN}/{obj_name}"
         })
 
@@ -199,9 +222,9 @@ class DisplayWidget(widget.Widget):
                 if self._started:
                     state, critiques = self._exercise.update(pose, self._heuristics)
                     for critique in critiques:
-                        if critique[0] not in self._critiques_given:
+                        if critique.name not in self._critiques_given:
+                            self._critiques_given.add(critique.name)
                             self._send_critique(critique, prev_frame)
-                            self._critiques_given.add(critique[0])
                 self._heuristics.draw(frame)
             except IndexError:
                 pass

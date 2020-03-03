@@ -87,15 +87,6 @@
                     font_size: 36
                     font_name: 'critique/app/assets/fonts/HelveticaNeue Light.ttf'
                 
-                # Widget:
-                #     canvas:
-                #         Rectangle:
-                #             size: self.size
-                #             pos: self.pos
-                #             source: 'critique/app/assets/weather-icons/cloudy.png'
-                #     size: 40, 40
-                #     size_hint: None, None
-                
                 Label:
                     id: weather_label
                     markdown: True
@@ -271,7 +262,7 @@
                 size_hint: None, None
                 size: 150, 40
                 on_press:
-                    display._send_critique(('test', 'this is a test critique'))
+                    display._test_critique()
             
             Label:
                 text: "Started:"

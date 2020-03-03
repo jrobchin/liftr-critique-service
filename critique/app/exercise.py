@@ -1,14 +1,27 @@
+from typing import List
+
 from critique.pose.modules.pose import Pose, KEYPOINTS
 from critique.measure import PoseHeuristics, HEURISTICS, MV_DIRECTIONS
 
-class Exercise():
+
+class Critique:
+    def __init__(self, name, states, msg, func):
+        self.name = name
+        self.states = states
+        self.msg = msg
+        self.func = func
+
+    def __call__(self, pose:Pose, heuristics:PoseHeuristics):
+        self.func(pose, heuristics)
+
+class Exercise:
 
     class STATES:
         pass
 
     def __init__(self, name, initial_state):
         self._states = {}
-        self._critiques = []
+        self._critiques: List[Critique] = []
         self._init_state = initial_state
 
         self.name = name
@@ -18,8 +31,8 @@ class Exercise():
     def _add_state(self, state, func):
         self._states[state] = func
     
-    def _add_critique(self, states, name, caption, func):
-        self._critiques.append((states, name, caption, func))
+    def _add_critique(self, critique:Critique):
+        self._critiques.append(critique)
 
     def update(self, pose, heuristics):
         raise NotImplementedError()
@@ -38,22 +51,27 @@ class ShoulderPress(Exercise):
         self._add_state(self.STATES.DOWN, self._state_down)
 
         self._add_critique(
-            [self.STATES.UP],
-            'lock_elbows',
-            'Make sure not to lock your elbows at the top of your press.',
-            self._critique_lock_elbows
+            Critique(
+                'lock_elbows',
+                [self.STATES.UP],
+                'Make sure not to lock your elbows at the top of your press.',
+                self._critique_lock_elbows
+            )
         )
         self._add_critique(
-            [self.STATES.DOWN],
-            'too_low',
-            'Your arms should make about a 90 degree angle with your body at the bottom.',
-            self._critique_too_low
+            Critique(
+                'too_low',
+                [self.STATES.DOWN],
+                'Your arms should make about a 90 degree angle with your body at the bottom.',
+                self._critique_too_low
+            )
         )
 
     def _state_up(self, pose:Pose, heuristics:PoseHeuristics):
-        avg_shldr = heuristics.get_angle(HEURISTICS.AVG_SHLDRS)
-        if avg_shldr is not None:
-            if avg_shldr < 160:
+        left_shldr = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
+        right_shldr = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
+        if left_shldr and right_shldr:
+            if right_shldr < -50 and left_shldr > 50:
                 r_wri_movement = heuristics.get_movement(KEYPOINTS.R_WRI)
                 l_wri_movement = heuristics.get_movement(KEYPOINTS.L_WRI)
                 if r_wri_movement.y == MV_DIRECTIONS.HOLD and l_wri_movement.y == MV_DIRECTIONS.HOLD:
@@ -61,9 +79,10 @@ class ShoulderPress(Exercise):
         return self.STATES.UP
     
     def _state_down(self, pose:Pose, heuristics:PoseHeuristics):
-        avg_shldr = heuristics.get_angle(HEURISTICS.AVG_SHLDRS)
-        if avg_shldr is not None:
-            if avg_shldr > 160:
+        left_shldr = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
+        right_shldr = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
+        if left_shldr and right_shldr:
+            if right_shldr > 0 and left_shldr < 0:
                 r_wri_movement = heuristics.get_movement(KEYPOINTS.R_WRI)
                 l_wri_movement = heuristics.get_movement(KEYPOINTS.L_WRI)
                 if r_wri_movement.y == MV_DIRECTIONS.HOLD and l_wri_movement.y == MV_DIRECTIONS.HOLD:
@@ -74,9 +93,9 @@ class ShoulderPress(Exercise):
         r_elb_angle = heuristics.get_angle(HEURISTICS.RIGHT_ELBOW)
         l_elb_angle = heuristics.get_angle(HEURISTICS.LEFT_ELBOW)
         if r_elb_angle is not None:
-            return r_elb_angle > 165
+            return r_elb_angle > -5
         if r_elb_angle is not None:
-            return l_elb_angle > 165
+            return l_elb_angle < 5
 
     def _critique_too_low(self, pose:Pose, heuristics:PoseHeuristics):
         pass
@@ -87,9 +106,9 @@ class ShoulderPress(Exercise):
         
         critiques = []
         for critique in self._critiques:
-            if self.state in critique[0]:
-                if critique[3](pose, heuristics):
-                    critiques.append((critique[1], critique[2]))
+            if self.state in critique.states:
+                if critique.func(pose, heuristics):
+                    critiques.append(critique)
 
         next_state = self._states[self.state](pose, heuristics)
         if next_state != self.state:
