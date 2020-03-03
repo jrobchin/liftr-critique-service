@@ -26,7 +26,7 @@ from critique.app import get_kv_file
 from critique.app.services import session_service
 from critique.measure import PoseHeuristics
 from critique.pose.estimator import PoseEstimator
-from critique.app.exercise import Critique, ShoulderPress
+from critique.app.exercises import Critique, EXERCISES
 
 Window.maximize()
 
@@ -37,15 +37,7 @@ class DisplayWidget(widget.Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._cap = None
-        self._curr_frame = None
-        self._estimator = PoseEstimator()
-        self._heuristics = PoseHeuristics()
-        self._exercise = ShoulderPress()
-        self._critiques_given = set()
-        self._reps = 0
-        self._update_loop = None
-        self._started = False
+        self.reset()
  
         self._display = image.Image()
         self._display.allow_stretch = True
@@ -70,7 +62,7 @@ class DisplayWidget(widget.Widget):
         self._curr_frame = None
         self._estimator = PoseEstimator()
         self._heuristics = PoseHeuristics()
-        self._exercise = ShoulderPress()
+        self._exercise = None
         self._critiques_given = set()
         self._update_loop = None
         self._started = False
@@ -97,9 +89,27 @@ class DisplayWidget(widget.Widget):
                 self._cap = cv2.VideoCapture(camera)
         
     def _select_exercise(self, exercise):
-        # self._exercise = exercise
+        selected_exercise = EXERCISES.get(exercise)
 
         screen = App.get_running_app().get_screen()
+
+        if selected_exercise is None:
+            # Notify error
+            screen.ids.workout_label.opacity = 0
+            screen.ids.workout_select_info_box.opacity = 1
+            screen.ids.workout_select_info_label.opacity = 1
+            screen.ids.workout_select_info_label.text = f"Selected workout not installed..."
+            
+            def _cb(dt):
+                # Hide pop up and set workout label
+                screen.ids.workout_select_info_box.opacity = 0
+                screen.ids.workout_select_info_label.opacity = 0
+            
+            Clock.schedule_once(_cb, 1.5)
+
+            return
+        
+        self._exercise = selected_exercise()
 
         # Notify workout selection
         screen.ids.workout_label.opacity = 0
@@ -108,14 +118,14 @@ class DisplayWidget(widget.Widget):
         exercise_label = screen.ids.workout_select_info_label
         exercise_label.text = f"Workout Selected: {exercise}"
 
-        def _change_workout(dt):
+        def _cb(dt):
             # Hide pop up and set workout label
             screen.ids.workout_label.text = f"Workout: {exercise}"
             screen.ids.workout_label.opacity = 1
             screen.ids.workout_select_info_box.opacity = 0
             screen.ids.workout_select_info_label.opacity = 0
         
-        Clock.schedule_once(_change_workout, 1.5)
+        Clock.schedule_once(_cb, 1.5)
     
     def _start_exercise(self, reps):
         screen = App.get_running_app().get_screen()
