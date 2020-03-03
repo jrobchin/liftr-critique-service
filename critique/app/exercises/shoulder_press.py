@@ -17,6 +17,8 @@ class ShoulderPress(Exercise):
         self._add_state(self.STATES.UP, self._state_up)
         self._add_state(self.STATES.DOWN, self._state_down)
 
+        self._set_rep_transition(self.STATES.DOWN, self.STATES.UP)
+
         self._add_critique(
             Critique(
                 'lock_elbows',
@@ -95,21 +97,3 @@ class ShoulderPress(Exercise):
             return r_shldr_angle > 220
         if l_shldr_angle is not None:
             return l_shldr_angle > 220
-
-    def update(self, pose: Pose, heuristics: PoseHeuristics):
-        if self.state is None:
-            self.state = self._init_state
-
-        critiques = []
-        for critique in self._critiques:
-            if self.state in critique.states:
-                if critique.func(pose, heuristics):
-                    critiques.append(critique)
-
-        next_state = self._states[self.state](pose, heuristics)
-        if next_state != self.state:
-            self.state = next_state
-            if self.state == self._init_state:
-                self.reps += 1
-
-        return self.state, critiques

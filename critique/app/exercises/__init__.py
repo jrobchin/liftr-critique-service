@@ -24,6 +24,7 @@ class Exercise:
         self._states = {}
         self._critiques: List[Critique] = []
         self._init_state = None
+        self._rep_transition: tuple = None
 
         self.name = name
         self.state = None
@@ -37,12 +38,38 @@ class Exercise:
     def _add_critique(self, critique: Critique):
         self._critiques.append(critique)
 
+    def _set_rep_transition(self, state1, state2):
+        self._rep_transition = (state1, state2)
+
+    def _check_reps(self, curr_state, next_state):
+        if self._rep_transition is None:
+            raise Exception("Repetition transition not set.")
+        return self._rep_transition[0] == curr_state and \
+               self._rep_transition[1] == next_state
+
     def _close_to(self, test_val, target_val, thresh):
         """
         Returns True if `test_val` is within the `thresh` of `target_val`.
         """
         return abs(target_val - test_val) < thresh
 
+    def update(self, pose: Pose, heuristics: PoseHeuristics):
+        if self.state is None:
+            self.state = self._init_state
+
+        critiques = []
+        for critique in self._critiques:
+            if self.state in critique.states:
+                if critique.func(pose, heuristics):
+                    critiques.append(critique)
+
+        next_state = self._states[self.state](pose, heuristics)
+        if next_state != self.state:
+            if self._check_reps(self.state, next_state):
+                self.reps += 1
+            self.state = next_state
+
+        return self.state, critiques
 
 class Set():
     """
