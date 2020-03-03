@@ -25,9 +25,9 @@ class HEURISTICS():
     AVG_KNEES   = "AVG_KNEES"
     RIGHT_KNEE  = "RIGHT_KNEE"
     LEFT_KNEE   = "LEFT_KNEE"
-    AVG_SHLDRS   = "AVG_SHLDRS"
-    RIGHT_SHLDR  = "RIGHT_SHLDR"
-    LEFT_SHLDR   = "LEFT_SHLDR"
+    AVG_SHLDRS  = "AVG_SHLDRS"
+    RIGHT_SHLDR = "RIGHT_SHLDR"
+    LEFT_SHLDR  = "LEFT_SHLDR"
     SIDE_NECK   = "SIDE_NECK"
 
 class MV_DIRECTIONS:
@@ -43,11 +43,12 @@ def calc_floor_pt(pose:Pose):
 
 # TODO: Refactor with *args or **kwargs
 def calc_angle(
-        pose:Pose, 
-        kpt1:Union[int, tuple, np.ndarray], 
-        kpt2:Union[int, tuple, np.ndarray], 
+        pose:Pose,
+        kpt1:Union[int, tuple, np.ndarray],
+        kpt2:Union[int, tuple, np.ndarray],
         kpt3:Union[int, tuple, np.ndarray],
-        degrees=False
+        degrees=False,
+        flip=False
     ):
     """
     Calculate angle between 3 keypoints using vectors.
@@ -104,7 +105,15 @@ def calc_angle(
         return None
 
     # angle = np.arccos(v1.dot(v2) / (norm_v1 * norm_v2))
-    angle = np.arcsin(np.cross(v1, v2) / (norm_v1 * norm_v2))
+    cross_product = np.cross(v1, v2)
+    dot_product = np.dot(v1, v2)
+    angle = np.arctan2(abs(cross_product), dot_product)
+
+    if cross_product < 0:
+        angle = 2*np.pi - angle
+    
+    if flip:
+        angle = 2*np.pi - angle
 
     if degrees:
         return deg(angle)
@@ -116,7 +125,8 @@ def _right_hip(pose:Pose, degrees=False):
         KEYPOINTS.R_SHO, 
         KEYPOINTS.R_HIP, 
         KEYPOINTS.R_KNEE,
-        degrees
+        degrees,
+        flip=True
     )
 
 def _left_hip(pose:Pose, degrees=False):
@@ -135,7 +145,8 @@ def _right_ankle(pose:Pose, degrees=False):
         floor_pt, 
         KEYPOINTS.R_ANK, 
         KEYPOINTS.R_KNEE,
-        degrees
+        degrees,
+        flip=True
     )
 
 def _left_ankle(pose:Pose, degrees=False):
@@ -154,7 +165,8 @@ def _right_elbow(pose:Pose, degrees=False):
         KEYPOINTS.R_SHO, 
         KEYPOINTS.R_ELB, 
         KEYPOINTS.R_WRI,
-        degrees
+        degrees,
+        flip=True
     )
 
 def _left_elbow(pose:Pose, degrees=False):
@@ -172,7 +184,8 @@ def _right_knee(pose:Pose, degrees=False):
         KEYPOINTS.R_HIP, 
         KEYPOINTS.R_KNEE, 
         KEYPOINTS.R_ANK,
-        degrees
+        degrees,
+        flip=True
     )
 
 def _left_knee(pose:Pose, degrees=False):
@@ -190,7 +203,8 @@ def _right_shldr(pose:Pose, degrees=False):
         KEYPOINTS.NECK,
         KEYPOINTS.R_SHO,
         KEYPOINTS.R_ELB, 
-        degrees
+        degrees,
+        flip=True
     )
 
 def _left_shldr(pose:Pose, degrees=False):
