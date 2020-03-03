@@ -1,0 +1,54 @@
+<AboutScreen>:
+    FloatLayout:
+        RelativeLayout:
+            id: panel
+            size_hint_x: 0.6
+            size_hint_y: 0.5
+            pos_hint: { 'center_x': 0.5, 'center_y': 0.5 }
+
+            canvas.before:
+                Color:
+                    rgb: 1, 1, 1
+                    a: 0.25
+                RoundedRectangle:
+                    size: self.size
+
+            BoxLayout:
+                orientation: 'vertical'
+
+                Label:
+                    text: "Liftr"
+                    size_hint_y: None
+                    height: 100
+                    text_size: self.size[0] - 20, self.size[1]
+                    color: 208/255, 0, 0, 1
+                    font_size: 81
+
+                Label:
+                    size_hint_y: None
+                    text_size: self.size[0] - 30, self.size[1]
+                    text: "Liftr is a virtual personal fitness trainer that uses AI to estimator your pose and give you real-time critiques."
+                    font_size: 24
+
+                Widget:
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: 60
+
+                    Widget:
+                        size_hint: None, None
+                        size: 20, 40
+
+                    AnchorLayout:
+                        anchor_x: 'left'
+                        anchor_y: 'center'
+
+                        Button:
+                            text: "Back"
+                            size_hint: None, None
+                            size: 75, 40
+                            on_press:
+                                root.manager.transition.direction = 'down'
+                                root.manager.current = 'menu'

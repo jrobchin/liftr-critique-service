@@ -2,7 +2,6 @@
     "remote.WSL.fileWatcher.polling": true,
     "python.pythonPath": "pyenv/bin/python",
     "python.linting.pylintArgs": [
-        "--errors-only",
         "--generated-members=numpy.* ,torch.* ,cv2.* , cv.*"
     ],
     "python.testing.unittestArgs": [

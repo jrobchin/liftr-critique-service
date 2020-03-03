@@ -1,5 +1,3 @@
-from typing import List
-
 from critique.pose.modules.pose import Pose, KEYPOINTS
 from critique.measure import PoseHeuristics, HEURISTICS, MV_DIRECTIONS
 from critique.app.exercises import Exercise, Critique
@@ -34,9 +32,7 @@ class ShoulderPress(Exercise):
             )
         )
 
-    """
-    States
-    """
+    # States
     def _state_up(self, pose:Pose, heuristics:PoseHeuristics):
         left_shldr = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
         right_shldr = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
@@ -59,9 +55,7 @@ class ShoulderPress(Exercise):
                     return self.STATES.UP
         return self.STATES.DOWN
 
-    """
-    Critiques
-    """
+    # Critiques
     def _critique_lock_elbows(self, pose:Pose, heuristics:PoseHeuristics):
         r_elb_angle = heuristics.get_angle(HEURISTICS.RIGHT_ELBOW)
         l_elb_angle = heuristics.get_angle(HEURISTICS.LEFT_ELBOW)

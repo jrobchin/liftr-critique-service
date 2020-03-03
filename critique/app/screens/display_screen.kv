@@ -1,155 +1,7 @@
-#:kivy 1.11
+#: include critique/app/widgets/exercise_widget.kv
+
 #:import settings critique.settings
 #:import os os
-
-<Widget>:
-    # canvas:
-    #     Rectangle:
-    #         size: 2, 2
-    #         pos: self.pos
-    font_name: 'critique/app/assets/fonts/HelveticaNeue Medium.ttf'
-
-<MenuScreen>:
-    canvas:
-        Rectangle:
-            pos: self.pos
-            size: self.size
-            source: 'critique/app/assets/menu-imgs/menu-2.jpg'
-
-    FloatLayout:
-        Button:
-            text: 'Refresh Session'
-            size_hint: None, None
-            size: 150, 40
-            border: 0, 0, 0, 0
-            color: 1, 1, 1, 1
-            background_color: 1, 1, 1, 0.7
-            on_press:
-                root.connect()
-        
-        Button:
-            text: 'Start'
-            size_hint: None, None
-            x: 150
-            size: 150, 40
-            border: 0, 0, 0, 0
-            color: 1, 1, 1, 1
-            background_color: 1, 1, 1, 0.7
-            on_press:
-                root._transition_to_display()
-            
-        AnchorLayout:
-            anchor_x: 'center'
-            anchor_y: 'center'
-
-            FloatLayout:
-
-                SessionKeyLabel:
-                    id: session_key_label
-                    size_hint: 1.0, 1.0
-                    color: 1, 1, 1, 1
-                    font_size: 600
-                
-                Label:
-                    text: "Enter the code above into your device to begin."
-                    size_hint: 1.0, None
-                    color: 1, 1, 1, 1
-                    font_size: 32
-                    y: 200
-                    font_name: 'critique/app/assets/fonts/HelveticaNeue Light.ttf'
-        
-        AnchorLayout:
-            anchor_x: 'left'
-            anchor_y: 'top'
-
-            Label:
-                text: "[color=#D00000]LIFTR[/color] [color=#FFFFFF]train[/color]"
-                markup: True
-                size_hint: None, None
-                size: self.texture_size
-                font_size: 81
-                font_name: 'critique/app/assets/fonts/HelveticaNeueHv.ttf'
-        
-        AnchorLayout:
-            anchor_x: 'right'
-            anchor_y: 'top'
-
-            StackLayout:
-                orientation: 'rl-tb'
-                spacing: 20, 0
-
-                Label:
-                    id: time_label
-                    text: "11:05AM"
-                    size_hint: None, None
-                    size: self.texture_size
-                    color: 1, 1, 1, 1
-                    font_size: 36
-                    font_name: 'critique/app/assets/fonts/HelveticaNeue Light.ttf'
-                
-                Label:
-                    id: weather_label
-                    markdown: True
-                    size_hint: None, None
-                    size: self.texture_size
-                    color: 1, 1, 1, 1
-                    font_size: 36
-                    font_name: 'critique/app/assets/fonts/HelveticaNeue Light.ttf'
-
-<AboutScreen>:
-    FloatLayout:
-        RelativeLayout:
-            id: panel
-            size_hint_x: 0.6
-            size_hint_y: 0.5
-            pos_hint: { 'center_x': 0.5, 'center_y': 0.5 }
-
-            canvas.before:
-                Color: 
-                    rgb: 1, 1, 1
-                    a: 0.25
-                RoundedRectangle:
-                    size: self.size
-        
-            BoxLayout:
-                orientation: 'vertical'
-                
-                Label:
-                    text: "Liftr"
-                    size_hint_y: None
-                    height: 100
-                    text_size: self.size[0] - 20, self.size[1]
-                    color: 208/255, 0, 0, 1
-                    font_size: 81
-                
-                Label:
-                    size_hint_y: None
-                    text_size: self.size[0] - 30, self.size[1]
-                    text: "Liftr is a virtual personal fitness trainer that uses AI to estimator your pose and give you real-time critiques."
-                    font_size: 24
-
-                Widget:
-
-                BoxLayout:
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: 60
-                    
-                    Widget:
-                        size_hint: None, None
-                        size: 20, 40
-
-                    AnchorLayout:
-                        anchor_x: 'left'
-                        anchor_y: 'center'
-
-                        Button:
-                            text: "Back"
-                            size_hint: None, None
-                            size: 75, 40
-                            on_press:
-                                root.manager.transition.direction = 'down'
-                                root.manager.current = 'menu'
 
 <DisplayScreen>:
     FloatLayout:
@@ -171,7 +23,7 @@
                 text: 'back'
                 size_hint: None, None
                 size: 75, 40
-                on_press: 
+                on_press:
                     root.manager.transition.direction = 'right'
                     root.manager.current = 'menu'
                     root.ids.display.stop()
@@ -186,7 +38,7 @@
                 valign: 'middle'
 
         # Main Display
-        DisplayWidget:
+        ExerciseWidget:
             id: display
             camera: settings.DEFAULT_CAMERA
 
@@ -214,56 +66,56 @@
                 size: 75, 40
                 on_press:
                     display.camera = '0'
-            
+
             Button:
                 text: '1'
                 size_hint: None, None
                 size: 75, 40
                 on_press:
                     display.camera = '1'
-            
+
             Button:
                 text: 'ohsp'
                 size_hint: None, None
                 size: 75, 40
                 on_press:
                     display.camera = 'ohsp.mp4'
-            
+
             Button:
                 text: 'bwswt'
                 size_hint: None, None
                 size: 75, 40
                 on_press:
                     display.camera = 'bwsqt.mp4'
-            
+
             Button:
                 text: 'shoulder_press'
                 size_hint: None, None
                 size: 150, 40
                 on_press:
                     display._select_exercise(self.text)
-            
+
             Button:
                 text: 'bicep_curl'
                 size_hint: None, None
                 size: 150, 40
                 on_press:
                     display._select_exercise(self.text)
-            
+
             Button:
                 text: 'start_exercise'
                 size_hint: None, None
                 size: 150, 40
                 on_press:
                     display._start_exercise(10)
-            
+
             Button:
                 text: 'test_critique'
                 size_hint: None, None
                 size: 150, 40
                 on_press:
                     display._test_critique()
-            
+
             Label:
                 text: "Started:"
                 size: self.texture_size[0] + 20, 40
@@ -279,35 +131,35 @@
                 text: "State:"
                 size: self.texture_size[0] + 20, 40
                 size_hint: None, None
-            
+
             Label:
                 id: state_value_label
                 text: ""
                 size: 100, 40
                 size_hint: None, None
-            
+
             Label:
                 text: "Reps:"
                 size: self.texture_size[0] + 20, 40
                 size_hint: None, None
-            
+
             Label:
                 id: rep_value_label
                 text: ""
                 size: 100, 40
                 size_hint: None, None
-            
+
             Label:
                 text: "Critiques:"
                 size: self.texture_size[0] + 20, 40
                 size_hint: None, None
-            
+
             Label:
                 id: critique_count_value_label
                 text: ""
                 size: 100, 40
                 size_hint: None, None
-            
+
     # Overlay
     FloatLayout:
 
@@ -325,7 +177,7 @@
                     RoundedRectangle:
                         size: self.size
                         pos: self.pos
-            
+
             Label:
                 id: workout_select_info_label
                 font_size: 32
@@ -346,7 +198,7 @@
                     RoundedRectangle:
                         size: self.size
                         pos: self.pos
-            
+
             Label:
                 id: count_down_label
                 opacity: 0
