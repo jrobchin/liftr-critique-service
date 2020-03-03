@@ -2,7 +2,8 @@
     "remote.WSL.fileWatcher.polling": true,
     "python.pythonPath": "pyenv/bin/python",
     "python.linting.pylintArgs": [
-        "--generated-members=numpy.* ,torch.* ,cv2.* , cv.*"
+        "--generated-members=numpy.*,torch.*,cv2.*,cv.*",
+        "--disable=missing-class-docstring,missing-function-docstring,missing-module-docstring,invalid-name"
     ],
     "python.testing.unittestArgs": [
         "-v",

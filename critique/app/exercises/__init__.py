@@ -11,7 +11,7 @@ class Critique:
         self.msg = msg
         self.func = func
 
-    def __call__(self, pose:Pose, heuristics:PoseHeuristics):
+    def __call__(self, pose: Pose, heuristics: PoseHeuristics):
         self.func(pose, heuristics)
 
 
@@ -28,17 +28,17 @@ class Exercise:
         self.name = name
         self.state = None
         self.reps = 0
-    
+
     def _add_state(self, state, func):
         self._states[state] = func
-    
-    def _add_critique(self, critique:Critique):
+
+    def _add_critique(self, critique: Critique):
         self._critiques.append(critique)
 
-    def update(self, pose:Pose, heuristics:PoseHeuristics):
+    def update(self, pose: Pose, heuristics: PoseHeuristics):
         if self.state == None:
             self.state = self._init_state
-        
+
         critiques = []
         for critique in self._critiques:
             if self.state in critique.states:
@@ -50,15 +50,18 @@ class Exercise:
             self.state = next_state
             if self.state == self._init_state:
                 self.reps += 1
-        
+
         return self.state, critiques
 
 
 class Set():
+    """
+    Set class.
+    """
     def __init__(self, exercise:Exercise):
         self._exercise = exercise
         self._state = self._exercise.state
-    
+
     def update(self, pose, heuristics):
         pass
 

@@ -6,7 +6,7 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix import widget, image
 from kivy import properties
-from kivy.graphics.texture import Texture
+from kivy.graphics.texture import Texture # pylint: disable=no-name-in-module
 import cv2
 import boto3
 from botocore.exceptions import ClientError
@@ -15,16 +15,28 @@ from critique import settings
 from critique.app.services import session_service
 from critique.measure import PoseHeuristics
 from critique.pose.estimator import PoseEstimator
-from critique.app.exercises import Critique, EXERCISES
+from critique.app.exercises import Critique, Exercise, EXERCISES
 
 
 class ExerciseWidget(widget.Widget):
-    camera = properties.StringProperty('1')
+    camera = properties.StringProperty('1') # pylint: disable=c-extension-no-member
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self._cap = None
+        self._curr_frame = None
+        self._estimator: PoseEstimator = None
+        self._heuristics: PoseHeuristics = None
+        self._exercise: Exercise = None
+        self._critiques_given: set = None
+        self._update_loop = None
+        self._started: bool = None
+        self._reps: int = None
+
         self.reset()
- 
+
+        self._error_label = None
         self._display = image.Image()
         self._display.allow_stretch = True
         self.add_widget(self._display)
@@ -35,14 +47,14 @@ class ExerciseWidget(widget.Widget):
         self.bind(
             camera=self._on_camera
         )
-        
+
     def start(self):
         Clock.schedule_once(self._on_start, 0)
 
     def stop(self):
         if self._update_loop is not None:
             Clock.unschedule(self._update_loop)
-        
+
     def reset(self):
         self._cap = None
         self._curr_frame = None
@@ -56,10 +68,10 @@ class ExerciseWidget(widget.Widget):
 
     def _on_start(self, *args):
         screen = App.get_running_app().get_screen()
-        self.error_label = screen.ids.error_label
+        self._error_label = screen.ids.error_label
         self._on_camera()
         self._update_loop = Clock.schedule_interval(self.update, 0)
-    
+
     def _on_camera(self, *args):
         if self._cap:
             self._cap.release()
@@ -73,7 +85,7 @@ class ExerciseWidget(widget.Widget):
                 # File path given, get path to file in res folder
                 camera = os.path.join(settings.RES_DIR, self.camera)
                 self._cap = cv2.VideoCapture(camera)
-        
+
     def _select_exercise(self, exercise):
         selected_exercise = EXERCISES.get(exercise)
 
@@ -85,16 +97,16 @@ class ExerciseWidget(widget.Widget):
             screen.ids.workout_select_info_box.opacity = 1
             screen.ids.workout_select_info_label.opacity = 1
             screen.ids.workout_select_info_label.text = f"Selected workout not installed..."
-            
+
             def _cb(dt):
                 # Hide pop up and set workout label
                 screen.ids.workout_select_info_box.opacity = 0
                 screen.ids.workout_select_info_label.opacity = 0
-            
+
             Clock.schedule_once(_cb, 1.5)
 
             return
-        
+
         self._exercise = selected_exercise()
 
         # Notify workout selection
@@ -110,12 +122,12 @@ class ExerciseWidget(widget.Widget):
             screen.ids.workout_label.opacity = 1
             screen.ids.workout_select_info_box.opacity = 0
             screen.ids.workout_select_info_label.opacity = 0
-        
+
         Clock.schedule_once(_cb, 1.5)
-    
+
     def _start_exercise(self, reps):
         screen = App.get_running_app().get_screen()
-        
+
         def _count_down(n, callback):
             def _animation(n):
                 screen.ids.count_down_label.text = str(n)
@@ -134,7 +146,7 @@ class ExerciseWidget(widget.Widget):
                 screen.ids.count_down_box.opacity = 0
                 screen.ids.count_down_label.opacity = 0
                 callback()
-            
+
             Clock.schedule_once(lambda _: _animation(n), 0)
 
         def _cb():
@@ -143,7 +155,7 @@ class ExerciseWidget(widget.Widget):
 
         _count_down(3, _cb)
 
-    def _send_critique(self, critique:Critique, frame=None):
+    def _send_critique(self, critique: Critique, frame=None):
         if frame is None:
             frame = self._curr_frame
 
@@ -153,10 +165,15 @@ class ExerciseWidget(widget.Widget):
         s3 = boto3.client('s3')
         try:
             obj_name = uuid.uuid4().hex + ".jpg"
-            response = s3.upload_file(tmp_fpath, settings.S3_BUCKET_NAME, obj_name, ExtraArgs={'ACL':'public-read'})
+            s3.upload_file(
+                tmp_fpath,
+                settings.S3_BUCKET_NAME,
+                obj_name,
+                ExtraArgs={'ACL':'public-read'}
+            )
         except ClientError:
             logging.error("Error uploading to S3.")
-        
+
         # Send critique to app
         session_service.emit('make_critique', {
             "exercise": self._exercise.name,
@@ -166,7 +183,7 @@ class ExerciseWidget(widget.Widget):
 
         screen = App.get_running_app().get_screen()
         screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
-    
+
     def _test_critique(self):
         frame = self._curr_frame
 
@@ -176,10 +193,15 @@ class ExerciseWidget(widget.Widget):
         s3 = boto3.client('s3')
         try:
             obj_name = uuid.uuid4().hex + ".jpg"
-            response = s3.upload_file(tmp_fpath, settings.S3_BUCKET_NAME, obj_name, ExtraArgs={'ACL':'public-read'})
+            s3.upload_file(
+                tmp_fpath,
+                settings.S3_BUCKET_NAME,
+                obj_name,
+                ExtraArgs={'ACL':'public-read'}
+            )
         except ClientError:
             logging.error("Error uploading to S3.")
-        
+
         # Send critique to app
         session_service.emit('make_critique', {
             "exercise": self._exercise.name,
@@ -189,9 +211,9 @@ class ExerciseWidget(widget.Widget):
 
         screen = App.get_running_app().get_screen()
         screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
-    
+
     def _update_rep_counter(self, reps):
-        session_service.emit('update_reps', { "reps": reps })
+        session_service.emit('update_reps', {"reps": reps})
 
     def update(self, dt):
         if self._cap:
@@ -200,12 +222,12 @@ class ExerciseWidget(widget.Widget):
             ret, frame = self._cap.read()
             frame = cv2.flip(frame, 1)
 
-            if ret: 
+            if ret:
                 self._curr_frame = frame.copy()
-                self.error_label.opacity = 0
+                self._error_label.opacity = 0
                 self._display.opacity = 1
             else:
-                self.error_label.opacity = 1
+                self._error_label.opacity = 1
                 self._display.opacity = 0
                 return
 

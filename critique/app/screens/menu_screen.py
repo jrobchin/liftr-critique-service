@@ -20,23 +20,23 @@ class MenuScreen(screenmanager.Screen):
 
         self._update_hud()
         Clock.schedule_interval(self._update_hud, 60)
-        
+
     def connect(self, *args):
         app = App.get_running_app()
-        
+
         def _on_success():
             self.ids.session_key_label.text = f"{session_service.s_key}"
             app.state['connected'] = True
-        
+
         def _on_error():
             self.ids.session_key_label.text = "Error"
             app.state['connected'] = False
-        
+
         session_service.connect(on_success=_on_success, on_error=_on_error)
 
     def _transition_to_display(self):
         self.manager.get_screen('display').ids.display.start()
-        self.manager.transition.direction = 'left' 
+        self.manager.transition.direction = 'left'
         self.manager.current = 'display'
 
     def _transition_to_about(self):
@@ -52,6 +52,7 @@ class MenuScreen(screenmanager.Screen):
                           f"id={settings.OWM_CITY_ID}&appid={settings.OWM_API_KEY}")
         if res.status_code == 200:
             data = res.json()
-            self.ids.weather_label.text = f"{data['weather'][0]['main']} {data['main']['temp']:.0f}°C"
+            self.ids.weather_label.text = \
+                f"{data['weather'][0]['main']} {data['main']['temp']:.0f}°C"
         else:
             self.ids.weather_label.text = ""
