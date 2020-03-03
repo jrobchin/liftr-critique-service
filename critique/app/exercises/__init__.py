@@ -20,38 +20,28 @@ class Exercise:
     class STATES:
         pass
 
-    def __init__(self, name, initial_state):
+    def __init__(self, name):
         self._states = {}
         self._critiques: List[Critique] = []
-        self._init_state = initial_state
+        self._init_state = None
 
         self.name = name
         self.state = None
         self.reps = 0
 
-    def _add_state(self, state, func):
+    def _add_state(self, state, func, initial=False):
+        if initial:
+            self._init_state = state
         self._states[state] = func
 
     def _add_critique(self, critique: Critique):
         self._critiques.append(critique)
 
-    def update(self, pose: Pose, heuristics: PoseHeuristics):
-        if self.state == None:
-            self.state = self._init_state
-
-        critiques = []
-        for critique in self._critiques:
-            if self.state in critique.states:
-                if critique.func(pose, heuristics):
-                    critiques.append(critique)
-
-        next_state = self._states[self.state](pose, heuristics)
-        if next_state != self.state:
-            self.state = next_state
-            if self.state == self._init_state:
-                self.reps += 1
-
-        return self.state, critiques
+    def _close_to(self, test_val, target_val, thresh):
+        """
+        Returns True if `test_val` is within the `thresh` of `target_val`.
+        """
+        return abs(target_val - test_val) < thresh
 
 
 class Set():
