@@ -14,6 +14,7 @@ class Critique:
     def __call__(self, pose:Pose, heuristics:PoseHeuristics):
         self.func(pose, heuristics)
 
+
 class Exercise:
 
     class STATES:
@@ -34,8 +35,23 @@ class Exercise:
     def _add_critique(self, critique:Critique):
         self._critiques.append(critique)
 
-    def update(self, pose, heuristics):
-        raise NotImplementedError()
+    def update(self, pose:Pose, heuristics:PoseHeuristics):
+        if self.state == None:
+            self.state = self._init_state
+        
+        critiques = []
+        for critique in self._critiques:
+            if self.state in critique.states:
+                if critique.func(pose, heuristics):
+                    critiques.append(critique)
+
+        next_state = self._states[self.state](pose, heuristics)
+        if next_state != self.state:
+            self.state = next_state
+            if self.state == self._init_state:
+                self.reps += 1
+        
+        return self.state, critiques
 
 
 class ShoulderPress(Exercise):
@@ -61,12 +77,15 @@ class ShoulderPress(Exercise):
         self._add_critique(
             Critique(
                 'too_low',
-                [self.STATES.DOWN],
+                [self.STATES.DOWN, self.STATES.UP],
                 'Your arms should make about a 90 degree angle with your body at the bottom.',
                 self._critique_too_low
             )
         )
 
+    """
+    States
+    """
     def _state_up(self, pose:Pose, heuristics:PoseHeuristics):
         left_shldr = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
         right_shldr = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
@@ -89,6 +108,9 @@ class ShoulderPress(Exercise):
                     return self.STATES.UP
         return self.STATES.DOWN
 
+    """
+    Critiques
+    """
     def _critique_lock_elbows(self, pose:Pose, heuristics:PoseHeuristics):
         r_elb_angle = heuristics.get_angle(HEURISTICS.RIGHT_ELBOW)
         l_elb_angle = heuristics.get_angle(HEURISTICS.LEFT_ELBOW)
@@ -98,25 +120,12 @@ class ShoulderPress(Exercise):
             return l_elb_angle < 5
 
     def _critique_too_low(self, pose:Pose, heuristics:PoseHeuristics):
-        pass
-
-    def update(self, pose:Pose, heuristics:PoseHeuristics):
-        if self.state == None:
-            self.state = self._init_state
-        
-        critiques = []
-        for critique in self._critiques:
-            if self.state in critique.states:
-                if critique.func(pose, heuristics):
-                    critiques.append(critique)
-
-        next_state = self._states[self.state](pose, heuristics)
-        if next_state != self.state:
-            self.state = next_state
-            if self.state == self._init_state:
-                self.reps += 1
-        
-        return self.state, critiques
+        r_shldr_angle = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
+        l_shldr_angle = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
+        if r_shldr_angle is not None:
+            return r_shldr_angle > 65
+        if l_shldr_angle is not None:
+            return l_shldr_angle < -65
 
 
 class Set():
