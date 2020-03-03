@@ -17,5 +17,9 @@
     "python.testing.unittestEnabled": true,
     "terminal.integrated.env.linux": {
         "PYTHONPATH": "${workspaceFolder}"
+    },
+    "python.linting.enabled": true,
+    "search.exclude": {
+        "pyenv/": true,
     }
 }
