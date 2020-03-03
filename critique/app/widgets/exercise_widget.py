@@ -16,6 +16,7 @@ from critique.app.services import session_service
 from critique.measure import PoseHeuristics
 from critique.pose.estimator import PoseEstimator
 from critique.app.exercises import Critique, Exercise, EXERCISES
+from critique.app.threads import CallbackThread
 
 
 class ExerciseWidget(widget.Widget):
@@ -155,62 +156,46 @@ class ExerciseWidget(widget.Widget):
 
         _count_down(3, _cb)
 
-    def _send_critique(self, critique: Critique, frame=None):
+    def _send_critique(self, critique:Critique, frame=None):
         if frame is None:
             frame = self._curr_frame
 
-        # Upload screenshot
-        tmp_fpath = 'tmp/tmp.jpg'
-        cv2.imwrite(tmp_fpath, frame)
-        s3 = boto3.client('s3')
-        try:
-            obj_name = uuid.uuid4().hex + ".jpg"
-            s3.upload_file(
-                tmp_fpath,
-                settings.S3_BUCKET_NAME,
-                obj_name,
-                ExtraArgs={'ACL':'public-read'}
-            )
-        except ClientError:
-            logging.error("Error uploading to S3.")
+        obj_name = uuid.uuid4().hex + ".jpg"
 
-        # Send critique to app
-        session_service.emit('make_critique', {
-            "exercise": self._exercise.name,
-            "caption": critique.msg,
-            "image": f"{settings.S3_BUCKET_DOMAIN}/{obj_name}"
-        })
+        def _upload_image():
+            # Upload screenshot
+            tmp_fpath = 'tmp/tmp.jpg'
+            cv2.imwrite(tmp_fpath, frame)
+            s3 = boto3.client('s3')
+            try:
+                s3.upload_file(
+                    tmp_fpath,
+                    settings.S3_BUCKET_NAME,
+                    obj_name,
+                    ExtraArgs={'ACL':'public-read'}
+                )
+            except ClientError:
+                logging.error("Error uploading to S3.")
+        
+        def _cb():
+            # Send critique to app
+            session_service.emit('make_critique', {
+                "exercise": self._exercise.name,
+                "caption": critique.msg,
+                "image": f"{settings.S3_BUCKET_DOMAIN}/{obj_name}"
+            })
 
-        screen = App.get_running_app().get_screen()
-        screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
+            screen = App.get_running_app().get_screen()
+            screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
+        
+        CallbackThread(
+            name='critique_image_upload',
+            target=_upload_image,
+            callback=(_cb,),
+        ).start()
 
     def _test_critique(self):
-        frame = self._curr_frame
-
-        # Upload screenshot
-        tmp_fpath = 'tmp/tmp.jpg'
-        cv2.imwrite(tmp_fpath, frame)
-        s3 = boto3.client('s3')
-        try:
-            obj_name = uuid.uuid4().hex + ".jpg"
-            s3.upload_file(
-                tmp_fpath,
-                settings.S3_BUCKET_NAME,
-                obj_name,
-                ExtraArgs={'ACL':'public-read'}
-            )
-        except ClientError:
-            logging.error("Error uploading to S3.")
-
-        # Send critique to app
-        session_service.emit('make_critique', {
-            "exercise": self._exercise.name,
-            "caption": 'test_critique',
-            "image": f"{settings.S3_BUCKET_DOMAIN}/{obj_name}"
-        })
-
-        screen = App.get_running_app().get_screen()
-        screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
+        self._send_critique(Critique('test_critique', [], 'testing critiques', None))
 
     def _update_rep_counter(self, reps):
         session_service.emit('update_reps', {"reps": reps})
