@@ -1,4 +1,3 @@
-import os
 import json
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -50,6 +49,6 @@ class __SessionService__:
         self.client.on(event, func)
     
     def emit(self, event, data, callback=None):
-        self.client.emit(event, data)        
+        self.client.emit(event, data, callback=callback)   
 
 session_service = __SessionService__()
