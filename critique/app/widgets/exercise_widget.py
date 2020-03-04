@@ -25,6 +25,7 @@ class ExerciseWidget(widget.Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        # TODO: convert to properties
         self._cap = None
         self._curr_frame = None
         self._estimator: PoseEstimator = None
@@ -115,11 +116,11 @@ class ExerciseWidget(widget.Widget):
         screen.ids.workout_select_info_box.opacity = 1
         screen.ids.workout_select_info_label.opacity = 1
         exercise_label = screen.ids.workout_select_info_label
-        exercise_label.text = f"Workout Selected: {exercise}"
+        exercise_label.text = f"Workout Selected: {self._exercise.name}"
 
         def _cb(dt):
             # Hide pop up and set workout label
-            screen.ids.workout_label.text = f"{exercise}"
+            screen.ids.workout_label.text = f"{self._exercise.name}"
             screen.ids.workout_label.opacity = 1
             screen.ids.workout_select_info_box.opacity = 0
             screen.ids.workout_select_info_label.opacity = 0
