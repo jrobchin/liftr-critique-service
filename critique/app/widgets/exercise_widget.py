@@ -119,7 +119,7 @@ class ExerciseWidget(widget.Widget):
 
         def _cb(dt):
             # Hide pop up and set workout label
-            screen.ids.workout_label.text = f"Workout: {exercise}"
+            screen.ids.workout_label.text = f"{exercise}"
             screen.ids.workout_label.opacity = 1
             screen.ids.workout_select_info_box.opacity = 0
             screen.ids.workout_select_info_label.opacity = 0
@@ -152,7 +152,7 @@ class ExerciseWidget(widget.Widget):
 
         def _cb():
             self._started = True
-            screen.ids.started_value_label.text = "True"
+            screen.ids.started_value_label.text = "Y"
 
         _count_down(3, _cb)
 

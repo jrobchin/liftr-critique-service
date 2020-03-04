@@ -13,30 +13,6 @@
     BoxLayout:
         orientation:'vertical'
 
-        # Top Bar
-        BoxLayout:
-            orientation: 'horizontal'
-            height: 40
-            size_hint: 1.0, None
-
-            Button:
-                text: 'back'
-                size_hint: None, None
-                size: 75, 40
-                on_press:
-                    root.manager.transition.direction = 'right'
-                    root.manager.current = 'menu'
-                    root.ids.display.stop()
-
-            Label:
-                id: workout_label
-                text: ''
-                size_hint: None, None
-                size: 300, 40
-                text_size: self.size
-                padding_x: 20
-                valign: 'middle'
-
         # Main Display
         ExerciseWidget:
             id: display
@@ -59,6 +35,15 @@
                 size: 75, 40
                 on_press:
                     display.reset()
+            
+            Button:
+                text: 'back'
+                size_hint: None, None
+                size: 75, 40
+                on_press:
+                    root.manager.transition.direction = 'right'
+                    root.manager.current = 'menu'
+                    root.ids.display.stop()
 
             Button:
                 text: '0'
@@ -117,14 +102,25 @@
                     display._test_critique()
 
             Label:
+                text: "Workout:"
+                size: self.texture_size[0] + 20, 40
+                size_hint: None, None
+
+            Label:
+                id: workout_label
+                text: ""
+                size: 150, 40
+                size_hint: None, None
+            
+            Label:
                 text: "Started:"
                 size: self.texture_size[0] + 20, 40
                 size_hint: None, None
 
             Label:
                 id: started_value_label
-                text: "False"
-                size: 100, 40
+                text: "N"
+                size: 30, 40
                 size_hint: None, None
 
             Label:
@@ -146,7 +142,7 @@
             Label:
                 id: rep_value_label
                 text: ""
-                size: 100, 40
+                size: 30, 40
                 size_hint: None, None
 
             Label:
@@ -157,7 +153,7 @@
             Label:
                 id: critique_count_value_label
                 text: ""
-                size: 100, 40
+                size: 30, 40
                 size_hint: None, None
 
     # Overlay
