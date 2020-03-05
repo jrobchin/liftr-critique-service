@@ -7,13 +7,14 @@ from kivy.clock import Clock
 from kivy.uix import widget, image
 from kivy import properties
 from kivy.graphics.texture import Texture # pylint: disable=no-name-in-module
+from kivy.graphics import Color, Rectangle, Ellipse, Line
 import cv2
 import boto3
 from botocore.exceptions import ClientError
 
 from critique import settings
 from critique.app.services import session_service
-from critique.measure import PoseHeuristics
+from critique.measure import PoseHeuristics, Pose, KEYPOINTS
 from critique.pose.estimator import PoseEstimator
 from critique.app.exercises import Critique, Exercise, EXERCISES
 from critique.app.threads import CallbackThread
@@ -201,6 +202,44 @@ class ExerciseWidget(widget.Widget):
     def _update_rep_counter(self, reps):
         session_service.emit('update_reps', {"reps": reps})
 
+    def _draw_pose(self, pose:Pose, texture:Texture):
+        def _calc_tex_size(parent, texture):
+            parent_aspect = parent.size[0] / parent.size[1]
+            tex_aspect = texture.size[0] / texture.size[1]
+            if parent_aspect > tex_aspect:
+                return texture.size[0] * parent.size[1] / texture.size[1], parent.size[1]
+            else:
+                return parent.size[0], texture.size[1] * parent.size[0] / texture.size[0]
+
+        def _transform_kpt_pos(kpt_pos, texture, scale_factors, pos_offset, marker_size):
+            return kpt_pos[0] * scale_factors[0] + pos_offset[0], \
+                   (texture.size[1] - kpt_pos[1]) * scale_factors[1] + pos_offset[1]
+
+        texture_size = _calc_tex_size(self, texture)
+        texture_pos = (self.pos[0]+texture_size[0]//2, self.pos[1])
+        scale_factors = (texture_size[0] / texture.size[0], texture_size[1] / texture.size[1])
+        marker_size = 10
+
+        _canvas = self._display.canvas
+        _canvas.clear()
+
+        # Draw image
+        _canvas.add(Rectangle(pos=texture_pos, size=texture_size, texture=texture))
+
+        # Draw pose
+        if pose is not None:
+            for kpt_id in range(KEYPOINTS.NUM_KPTS):
+                kpt_pos = pose.keypoints[kpt_id].tolist()
+                if kpt_pos[0] == -1:
+                    continue
+                kpt_pos_t = _transform_kpt_pos(kpt_pos, texture, scale_factors, texture_pos, marker_size)
+                _canvas.add(Color(1, 0, 0))
+                _canvas.add(Ellipse(size=(marker_size, marker_size), pos=(kpt_pos_t[0] - marker_size//2, kpt_pos_t[1] - marker_size//2)))
+                _canvas.add(Color(0, 1, 0))
+                _canvas.add(
+                    Line(circle=(*kpt_pos_t, marker_size//2))
+                )
+
     def update(self, dt):
         if self._cap:
             if self._curr_frame is not None:
@@ -218,10 +257,10 @@ class ExerciseWidget(widget.Widget):
                 return
 
             state = ''
+            pose = None
             try:
                 pose = self._estimator.estimate(frame)[0]
                 pose.draw(frame)
-                pose = pose.get_kpt_group()
                 self._heuristics.update(pose)
                 if self._started:
                     state, critiques = self._exercise.update(pose, self._heuristics)
@@ -241,9 +280,8 @@ class ExerciseWidget(widget.Widget):
             image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
 
             # display image from the texture
-            self._display.texture = image_texture
+            self._draw_pose(pose, image_texture)
             self._display.size = self.size
-            self._display.pos = self.pos
 
             # set state label text and update reps
             if self._started:
