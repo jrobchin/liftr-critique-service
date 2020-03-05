@@ -37,7 +37,7 @@ class ShoulderPress(Exercise):
         )
 
     # States
-    def _state_set_up(self, pose: Pose, heuristics: PoseHeuristics):
+    def _state_set_up(self, pose:Pose, heuristics:PoseHeuristics):
         right_shldr = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
         left_shldr = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
         right_elbow = heuristics.get_angle(HEURISTICS.RIGHT_ELBOW)
@@ -57,19 +57,20 @@ class ShoulderPress(Exercise):
                l_wri_movement.y == MV_DIRECTIONS.HOLD:
                 return self.STATES.UP
         return self.STATES.SET_UP
-    
-    def _state_up(self, pose: Pose, heuristics: PoseHeuristics):
+
+    def _state_up(self, pose:Pose, heuristics:PoseHeuristics):
         left_shldr = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
         right_shldr = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
         if left_shldr and right_shldr:
             if right_shldr < 130 and left_shldr < 130:
                 r_wri_movement = heuristics.get_movement(KEYPOINTS.R_WRI)
                 l_wri_movement = heuristics.get_movement(KEYPOINTS.L_WRI)
-                if r_wri_movement.y == MV_DIRECTIONS.HOLD and l_wri_movement.y == MV_DIRECTIONS.HOLD:
+                if r_wri_movement.y == MV_DIRECTIONS.HOLD and \
+                   l_wri_movement.y == MV_DIRECTIONS.HOLD:
                     return self.STATES.DOWN
         return self.STATES.UP
-    
-    def _state_down(self, pose: Pose, heuristics: PoseHeuristics):
+
+    def _state_down(self, pose:Pose, heuristics:PoseHeuristics):
         left_shldr = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
         right_shldr = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
         if left_shldr and right_shldr:
@@ -82,7 +83,7 @@ class ShoulderPress(Exercise):
         return self.STATES.DOWN
 
     # Critiques
-    def _critique_lock_elbows(self, pose: Pose, heuristics: PoseHeuristics):
+    def _critique_lock_elbows(self, pose:Pose, heuristics:PoseHeuristics):
         r_elb_angle = heuristics.get_angle(HEURISTICS.RIGHT_ELBOW)
         l_elb_angle = heuristics.get_angle(HEURISTICS.LEFT_ELBOW)
         if r_elb_angle is not None:
@@ -90,7 +91,7 @@ class ShoulderPress(Exercise):
         if r_elb_angle is not None:
             return l_elb_angle > 170
 
-    def _critique_too_low(self, pose: Pose, heuristics: PoseHeuristics):
+    def _critique_too_low(self, pose:Pose, heuristics:PoseHeuristics):
         r_shldr_angle = heuristics.get_angle(HEURISTICS.RIGHT_SHLDR)
         l_shldr_angle = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
         if r_shldr_angle is not None:
