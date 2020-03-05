@@ -1,4 +1,5 @@
 from typing import List, Dict
+from collections import namedtuple
 
 from critique.pose.modules.pose import Pose, KEYPOINTS
 from critique.measure import PoseHeuristics, HEURISTICS, MV_DIRECTIONS
@@ -19,6 +20,8 @@ class Exercise:
 
     class STATES:
         pass
+    
+    State = namedtuple('State', 'func progress')
 
     def __init__(self, name):
         self._states = {}
@@ -30,10 +33,10 @@ class Exercise:
         self.state = None
         self.reps = 0
 
-    def _add_state(self, state, func, initial=False):
+    def _add_state(self, state, func, progress=None, initial=False):
         if initial:
             self._init_state = state
-        self._states[state] = func
+        self._states[state] = self.State(func, progress)
 
     def _add_critique(self, critique: Critique):
         self._critiques.append(critique)
@@ -63,7 +66,7 @@ class Exercise:
                 if critique.func(pose, heuristics):
                     critiques.append(critique)
 
-        next_state = self._states[self.state](pose, heuristics)
+        next_state = self._states[self.state].func(pose, heuristics)
         if next_state != self.state:
             if self._check_reps(self.state, next_state):
                 self.reps += 1
@@ -71,16 +74,12 @@ class Exercise:
 
         return self.state, critiques
 
-class Set():
-    """
-    Set class.
-    """
-    def __init__(self, exercise:Exercise):
-        self._exercise = exercise
-        self._state = self._exercise.state
 
-    def update(self, pose, heuristics):
-        pass
+class Progress:
+    """
+    Progress class.
+    """
+    pass
 
 
 from .shoulder_press import ShoulderPress

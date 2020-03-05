@@ -260,7 +260,6 @@ class ExerciseWidget(widget.Widget):
             pose = None
             try:
                 pose = self._estimator.estimate(frame)[0]
-                pose.draw(frame)
                 self._heuristics.update(pose)
                 if self._started:
                     state, critiques = self._exercise.update(pose, self._heuristics)

@@ -13,9 +13,19 @@ class ShoulderPress(Exercise):
     def __init__(self):
         super().__init__('Shoulder Press')
 
-        self._add_state(self.STATES.SET_UP, self._state_set_up, initial=True)
-        self._add_state(self.STATES.UP, self._state_up)
-        self._add_state(self.STATES.DOWN, self._state_down)
+        self._add_state(
+            self.STATES.SET_UP,
+            self._state_set_up,
+            initial=True
+        )
+        self._add_state(
+            self.STATES.UP,
+            self._state_up
+        )
+        self._add_state(
+            self.STATES.DOWN,
+            self._state_down
+        )
 
         self._set_rep_transition(self.STATES.DOWN, self.STATES.UP)
 
