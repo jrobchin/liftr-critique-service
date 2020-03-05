@@ -25,11 +25,11 @@ class KEYPOINTS():
     R_EAR  = 16
     L_EAR  = 17
     
-    _N_KPTS = 18
+    NUM_KPTS = 18
 
     @classmethod
     def all(cls):
-        return [i for i in range(cls._N_KPTS)]
+        return [i for i in range(cls.NUM_KPTS)]
 
 
 class Pose():
