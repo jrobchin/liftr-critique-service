@@ -24,8 +24,7 @@ class __SessionService__:
         # TODO: Clean this up
         try:
             self.client.connect(f"http://{hostname}")
-        # except socketio.exceptions.ConnectionError:
-        except Exception: # TODO: Figure out why the commented line hangs
+        except socketio.exceptions.ConnectionError:
             if on_error:
                 on_error()
                 return

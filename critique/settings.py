@@ -28,6 +28,8 @@ CHECKPOINT_PATH = os.path.join(BASE_DIR, 'pose/checkpoint_iter_370000.pth')
 DEFAULT_CAMERA = os.getenv('DEFAULT_CAMERA')
 
 BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN')
+
+DEBUG_POSE = get_env_bool('DEBUG_POSE')
 DISABLE_NET = get_env_bool('DISABLE_NET')
 DEGREES = get_env_bool('DEGREES')
 MV_HISTORY = 10

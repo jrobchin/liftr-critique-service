@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 import cv2
 import numpy as np
@@ -10,6 +11,7 @@ from critique.settings import CHECKPOINT_PATH
 from critique.pose.models.with_mobilenet import PoseEstimationWithMobileNet
 from critique.pose.modules import keypoints, pose as pose_module
 from critique.pose import preprocessing
+from critique.pose.modules.pose import Pose
 
 HEIGHT_SIZE = 256
 STRIDE = 8
@@ -56,7 +58,7 @@ class PoseEstimator:
 
         return heatmaps, pafs, scale, pad
     
-    def estimate(self, img, conf_thresh=0):
+    def estimate(self, img, conf_thresh=0) -> List[Pose]:
         if settings.DISABLE_NET:
             return []
 

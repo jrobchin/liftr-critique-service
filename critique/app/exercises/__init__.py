@@ -26,27 +26,33 @@ class Progress:
 
         self._ranges = []
 
-    def add_range(self, heuristic_id:HEURISTICS, low, high):
+    def add_range(
+            self,
+            heuristic_id:str,
+            keypoint:int,
+            low,
+            high
+        ) -> None:
         """
         Takes a heuristic and compares it to range.
         """
         self._ranges.append(
-            (heuristic_id, low, high)
+            (heuristic_id, keypoint, low, high)
         )
 
     def check_progress(
             self,
-            heurisitics:PoseHeuristics
-        ) -> Tuple[str, float]:
+            heurisitics:PoseHeuristics,
+        ) -> List[Tuple[str, int, float]]:
         progress = []
-        for h_id, low, high in self._ranges:
+        for h_id, kpt_id, low, high in self._ranges:
             h_val = heurisitics.get_angle(h_id)
             if h_val is None:
                 continue
             
-            h_progress = ((h_val - low) * 100) / (high - low)
+            h_progress = (h_val - low) / (high - low)
             progress.append(
-                (h_id, h_progress)
+                (h_id, kpt_id, h_progress)
             )
         return progress
 

@@ -214,14 +214,14 @@ class ExerciseWidget(widget.Widget):
     def _draw_image(self, texture:Texture, size:Tuple[int, int], pos:Tuple[int, int]):
         self._display.canvas.add(Rectangle(texture=texture, pos=pos, size=size))
 
-    def _draw_pose(self, pose: Pose, texture_size:Tuple[int, int], texture_pos:Tuple[int, int], image_size:Tuple[int, int]):
+    def _draw_pose(self, pose: Pose, progress, texture_size:Tuple[int, int], texture_pos:Tuple[int, int], image_size:Tuple[int, int]):
 
-        def _transform_kpt_pos(kpt_pos, texture_size, scale_factors, pos_offset):
+        def _transform_kpt_pos(kpt_pos, scale_factors, pos_offset):
             return kpt_pos[0] * scale_factors[0] + pos_offset[0], \
                    (image_size[1] - kpt_pos[1]) * scale_factors[1] + pos_offset[1]
 
         scale_factors = (texture_size[0] / image_size[0], texture_size[1] / image_size[1])
-        marker_size = 10
+        marker_size = 6
 
         _canvas = self._display.canvas
 
@@ -231,13 +231,25 @@ class ExerciseWidget(widget.Widget):
                 kpt_pos = pose.keypoints[kpt_id].tolist()
                 if kpt_pos[0] == -1:
                     continue
-                kpt_pos_t = _transform_kpt_pos(kpt_pos, texture_size, scale_factors, texture_pos)
-                _canvas.add(Color(1, 0, 0))
+                kpt_pos_t = _transform_kpt_pos(kpt_pos, scale_factors, texture_pos)
+                _canvas.add(Color(0, 0, 1, 0.5))
                 _canvas.add(Ellipse(size=(marker_size, marker_size), pos=(kpt_pos_t[0] - marker_size//2, kpt_pos_t[1] - marker_size//2)))
-                _canvas.add(Color(0, 1, 0))
-                _canvas.add(
-                    Line(circle=(*kpt_pos_t, marker_size//2))
-                )
+        
+        guide_size = 75
+        for h_id, kpt_id, val in progress:
+            fill_size = max(10, guide_size * val)
+
+            kpt_pos = pose.keypoints[kpt_id].tolist()
+            if kpt_pos[0] == -1:
+                continue
+            kpt_pos_t = _transform_kpt_pos(kpt_pos, scale_factors, texture_pos)
+            _canvas.add(Color(1-val, val, 0))
+            _canvas.add(Ellipse(size=(fill_size, fill_size), pos=(kpt_pos_t[0] - fill_size//2, kpt_pos_t[1] - fill_size//2)))
+            _canvas.add(Color(0, 0, 1))
+            _canvas.add(
+                Line(circle=(*kpt_pos_t, guide_size//2))
+            )
+
 
     def update(self, dt):
         if self._cap:
@@ -258,20 +270,20 @@ class ExerciseWidget(widget.Widget):
             self._display.canvas.clear()
 
             state = ''
-            pose = None
+            pose: Pose = None
+            progress = []
             try:
                 pose = self._estimator.estimate(frame)[0]
                 self._heuristics.update(pose)
-                self._heuristics.draw(frame)
+                if settings.DEBUG_POSE:
+                    self._heuristics.draw(frame)
+                    pose.draw(frame)
                 if self._started:
                     state, critiques, progress = self._exercise.update(pose, self._heuristics)
                     for critique in critiques:
                         if critique.name not in self._critiques_given:
                             self._critiques_given.add(critique.name)
                             self._send_critique(critique, prev_frame)
-                
-                    for p in progress:
-                        print(*p)
             except IndexError:
                 pass
 
@@ -282,13 +294,15 @@ class ExerciseWidget(widget.Widget):
                 size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
             image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
 
+            # calculate target size and position for drawing the image texture
             texture_size = self._calc_tex_size(self, image_texture)
             texture_pos = (self.center_x-texture_size[0]//2, self.pos[1])
 
+            # draw webcam feed
             self._draw_image(image_texture, texture_size, texture_pos)
 
             # display image from the texture
-            self._draw_pose(pose, texture_size, texture_pos, image_texture.size)
+            self._draw_pose(pose, progress, texture_size, texture_pos, image_texture.size)
             self._display.size = self.size
 
             # set state label text and update reps

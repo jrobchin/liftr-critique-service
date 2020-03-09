@@ -50,8 +50,8 @@ class ShoulderPress(Exercise):
             'raise',
             [self.STATES.UP]
         )
-        raise_progress.add_range(HEURISTICS.RIGHT_SHLDR, 180, 130)
-        raise_progress.add_range(HEURISTICS.LEFT_SHLDR, 180, 130)
+        raise_progress.add_range(HEURISTICS.RIGHT_SHLDR, KEYPOINTS.R_SHO, 180, 130)
+        raise_progress.add_range(HEURISTICS.LEFT_SHLDR, KEYPOINTS.L_SHO, 180, 130)
         self._add_progress(raise_progress)
 
     # States
