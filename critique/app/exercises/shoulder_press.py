@@ -1,6 +1,6 @@
 from critique.pose.modules.pose import Pose, KEYPOINTS
 from critique.measure import PoseHeuristics, HEURISTICS, MV_DIRECTIONS
-from critique.app.exercises import Exercise, Critique
+from critique.app.exercises import Exercise, Critique, Progress
 
 
 class ShoulderPress(Exercise):
@@ -45,6 +45,14 @@ class ShoulderPress(Exercise):
                 self._critique_too_low
             )
         )
+
+        raise_progress = Progress(
+            'raise',
+            [self.STATES.UP]
+        )
+        raise_progress.add_range(HEURISTICS.RIGHT_SHLDR, 180, 130)
+        raise_progress.add_range(HEURISTICS.LEFT_SHLDR, 180, 130)
+        self._add_progress(raise_progress)
 
     # States
     def _state_set_up(self, pose:Pose, heuristics:PoseHeuristics):

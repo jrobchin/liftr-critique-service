@@ -37,13 +37,13 @@ class MV_DIRECTIONS:
     LEFT = 'LEFT'
     RIGHT = 'RIGHT'
 
-def calc_floor_pt(pose:Pose):
+def calc_floor_pt(pose: Pose):
     # TODO: depends if they are facing right or left
     return np.int_(midpoint(pose.keypoints[KEYPOINTS.L_ANK], pose.keypoints[KEYPOINTS.R_ANK]))
 
 # TODO: Refactor with *args or **kwargs
 def calc_angle(
-        pose:Pose,
+        pose: Pose,
         kpt1:Union[int, tuple, np.ndarray],
         kpt2:Union[int, tuple, np.ndarray],
         kpt3:Union[int, tuple, np.ndarray],
@@ -119,7 +119,7 @@ def calc_angle(
         return deg(angle)
     return angle
 
-def _right_hip(pose:Pose, degrees=False):
+def _right_hip(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.R_SHO, 
@@ -129,7 +129,7 @@ def _right_hip(pose:Pose, degrees=False):
         flip=True
     )
 
-def _left_hip(pose:Pose, degrees=False):
+def _left_hip(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.L_SHO, 
@@ -138,7 +138,7 @@ def _left_hip(pose:Pose, degrees=False):
         degrees
     )
 
-def _right_ankle(pose:Pose, degrees=False):
+def _right_ankle(pose: Pose, degrees=False):
     floor_pt = calc_floor_pt(pose)
     return calc_angle(
         pose,
@@ -149,7 +149,7 @@ def _right_ankle(pose:Pose, degrees=False):
         flip=True
     )
 
-def _left_ankle(pose:Pose, degrees=False):
+def _left_ankle(pose: Pose, degrees=False):
     floor_pt = calc_floor_pt(pose)
     return calc_angle(
         pose,
@@ -159,7 +159,7 @@ def _left_ankle(pose:Pose, degrees=False):
         degrees
     )
 
-def _right_elbow(pose:Pose, degrees=False):
+def _right_elbow(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.R_SHO, 
@@ -169,7 +169,7 @@ def _right_elbow(pose:Pose, degrees=False):
         flip=True
     )
 
-def _left_elbow(pose:Pose, degrees=False):
+def _left_elbow(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.L_SHO, 
@@ -178,7 +178,7 @@ def _left_elbow(pose:Pose, degrees=False):
         degrees
     )
 
-def _right_knee(pose:Pose, degrees=False):
+def _right_knee(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.R_HIP, 
@@ -188,7 +188,7 @@ def _right_knee(pose:Pose, degrees=False):
         flip=True
     )
 
-def _left_knee(pose:Pose, degrees=False):
+def _left_knee(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.L_HIP, 
@@ -197,7 +197,7 @@ def _left_knee(pose:Pose, degrees=False):
         degrees
     )
 
-def _right_shldr(pose:Pose, degrees=False):
+def _right_shldr(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.NECK,
@@ -207,7 +207,7 @@ def _right_shldr(pose:Pose, degrees=False):
         flip=True
     )
 
-def _left_shldr(pose:Pose, degrees=False):
+def _left_shldr(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.NECK, 
@@ -216,7 +216,7 @@ def _left_shldr(pose:Pose, degrees=False):
         degrees
     )
 
-def _side_neck(pose:Pose, degrees=False):
+def _side_neck(pose: Pose, degrees=False):
     return calc_angle(
         pose,
         KEYPOINTS.NOSE, 
@@ -232,7 +232,7 @@ class DrawPosition:
         self._x_offset = x_offset
         self._y_offset = y_offset
         
-    def pos(self, pose:Pose):
+    def pos(self, pose: Pose):
         x_pos = mean([
             pose.keypoints[kpt][0] for kpt in self._kpt_ids
         ]) + self._x_offset
@@ -253,7 +253,7 @@ class MovementVector:
         self.x = MV_DIRECTIONS.HOLD
         self.y = MV_DIRECTIONS.HOLD
     
-    def update(self, pose:Pose):
+    def update(self, pose: Pose):
         kpt = pose.keypoints[self._kpt_id]
 
         if kpt[0] == -1:
@@ -401,8 +401,8 @@ class PoseHeuristics():
                 cv2.putText(img, f"{mv.x}", (dp[0], dp[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255))
                 cv2.putText(img, f"{mv.y}", (dp[0], dp[1]+40), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255))
 
-    def get_angle(self, heuristic_id:int):
+    def get_angle(self, heuristic_id: int):
         return self.heuristics[heuristic_id]
     
-    def get_movement(self, kpt_id:int):
+    def get_movement(self, kpt_id: int):
         return self.movement_vectors[kpt_id]

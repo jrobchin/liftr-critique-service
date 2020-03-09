@@ -1,6 +1,7 @@
 import os
 import uuid
 import logging
+from typing import Tuple
 
 from kivy.app import App
 from kivy.clock import Clock
@@ -158,7 +159,7 @@ class ExerciseWidget(widget.Widget):
 
         _count_down(3, _cb)
 
-    def _send_critique(self, critique:Critique, frame=None):
+    def _send_critique(self, critique: Critique, frame=None):
         if frame is None:
             frame = self._curr_frame
 
@@ -202,29 +203,27 @@ class ExerciseWidget(widget.Widget):
     def _update_rep_counter(self, reps):
         session_service.emit('update_reps', {"reps": reps})
 
-    def _draw_pose(self, pose:Pose, texture:Texture):
-        def _calc_tex_size(parent, texture):
-            parent_aspect = parent.size[0] / parent.size[1]
-            tex_aspect = texture.size[0] / texture.size[1]
-            if parent_aspect > tex_aspect:
-                return texture.size[0] * parent.size[1] / texture.size[1], parent.size[1]
-            else:
-                return parent.size[0], texture.size[1] * parent.size[0] / texture.size[0]
+    def _calc_tex_size(self, parent, texture):
+        parent_aspect = parent.size[0] / parent.size[1]
+        tex_aspect = texture.size[0] / texture.size[1]
+        if parent_aspect > tex_aspect:
+            return texture.size[0] * parent.size[1] // texture.size[1], parent.size[1]
+        else:
+            return parent.size[0], texture.size[1] * parent.size[0] // texture.size[0]
 
-        def _transform_kpt_pos(kpt_pos, texture, scale_factors, pos_offset, marker_size):
+    def _draw_image(self, texture:Texture, size:Tuple[int, int], pos:Tuple[int, int]):
+        self._display.canvas.add(Rectangle(texture=texture, pos=pos, size=size))
+
+    def _draw_pose(self, pose: Pose, texture_size:Tuple[int, int], texture_pos:Tuple[int, int], image_size:Tuple[int, int]):
+
+        def _transform_kpt_pos(kpt_pos, texture_size, scale_factors, pos_offset):
             return kpt_pos[0] * scale_factors[0] + pos_offset[0], \
-                   (texture.size[1] - kpt_pos[1]) * scale_factors[1] + pos_offset[1]
+                   (image_size[1] - kpt_pos[1]) * scale_factors[1] + pos_offset[1]
 
-        texture_size = _calc_tex_size(self, texture)
-        texture_pos = (self.pos[0]+texture_size[0]//2, self.pos[1])
-        scale_factors = (texture_size[0] / texture.size[0], texture_size[1] / texture.size[1])
+        scale_factors = (texture_size[0] / image_size[0], texture_size[1] / image_size[1])
         marker_size = 10
 
         _canvas = self._display.canvas
-        _canvas.clear()
-
-        # Draw image
-        _canvas.add(Rectangle(pos=texture_pos, size=texture_size, texture=texture))
 
         # Draw pose
         if pose is not None:
@@ -232,7 +231,7 @@ class ExerciseWidget(widget.Widget):
                 kpt_pos = pose.keypoints[kpt_id].tolist()
                 if kpt_pos[0] == -1:
                     continue
-                kpt_pos_t = _transform_kpt_pos(kpt_pos, texture, scale_factors, texture_pos, marker_size)
+                kpt_pos_t = _transform_kpt_pos(kpt_pos, texture_size, scale_factors, texture_pos)
                 _canvas.add(Color(1, 0, 0))
                 _canvas.add(Ellipse(size=(marker_size, marker_size), pos=(kpt_pos_t[0] - marker_size//2, kpt_pos_t[1] - marker_size//2)))
                 _canvas.add(Color(0, 1, 0))
@@ -255,19 +254,24 @@ class ExerciseWidget(widget.Widget):
                 self._error_label.opacity = 1
                 self._display.opacity = 0
                 return
+            
+            self._display.canvas.clear()
 
             state = ''
             pose = None
             try:
                 pose = self._estimator.estimate(frame)[0]
                 self._heuristics.update(pose)
+                self._heuristics.draw(frame)
                 if self._started:
-                    state, critiques = self._exercise.update(pose, self._heuristics)
+                    state, critiques, progress = self._exercise.update(pose, self._heuristics)
                     for critique in critiques:
                         if critique.name not in self._critiques_given:
                             self._critiques_given.add(critique.name)
                             self._send_critique(critique, prev_frame)
-                self._heuristics.draw(frame)
+                
+                    for p in progress:
+                        print(*p)
             except IndexError:
                 pass
 
@@ -278,8 +282,13 @@ class ExerciseWidget(widget.Widget):
                 size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
             image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
 
+            texture_size = self._calc_tex_size(self, image_texture)
+            texture_pos = (self.center_x-texture_size[0]//2, self.pos[1])
+
+            self._draw_image(image_texture, texture_size, texture_pos)
+
             # display image from the texture
-            self._draw_pose(pose, image_texture)
+            self._draw_pose(pose, texture_size, texture_pos, image_texture.size)
             self._display.size = self.size
 
             # set state label text and update reps
