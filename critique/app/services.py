@@ -23,7 +23,7 @@ class __SessionService__:
 
         # TODO: Clean this up
         try:
-            self.client.connect(f"http://{hostname}")
+            self.client.connect(f"http://{hostname}", transports=['websocket'])
         except socketio.exceptions.ConnectionError:
             if on_error:
                 on_error()

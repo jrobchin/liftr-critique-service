@@ -17,7 +17,7 @@ from critique import settings
 from critique.app.services import session_service
 from critique.measure import PoseHeuristics, Pose, KEYPOINTS
 from critique.pose.estimator import PoseEstimator
-from critique.app.exercises import Critique, Exercise, EXERCISES
+from critique.app.exercises import Critique, Exercise, EXERCISES, ExerciseState
 from critique.app.threads import CallbackThread
 
 
@@ -37,6 +37,7 @@ class ExerciseWidget(widget.Widget):
         self._update_loop = None
         self._started: bool = None
         self._reps: int = None
+        self._state: ExerciseState = None
 
         self.reset()
 
@@ -114,7 +115,7 @@ class ExerciseWidget(widget.Widget):
         self._exercise = selected_exercise()
 
         # Notify workout selection
-        screen.ids.workout_label.opacity = 0
+        # screen.ids.workout_label.opacity = 0
         screen.ids.workout_select_info_box.opacity = 1
         screen.ids.workout_select_info_label.opacity = 1
         exercise_label = screen.ids.workout_select_info_label
@@ -129,7 +130,10 @@ class ExerciseWidget(widget.Widget):
 
         Clock.schedule_once(_cb, 1.5)
 
-    def _start_exercise(self, reps):
+    def _start_exercise(self, reps=None):
+
+        self._state = self._exercise.start_state
+
         screen = App.get_running_app().get_screen()
 
         def _count_down(n, callback):
@@ -155,7 +159,7 @@ class ExerciseWidget(widget.Widget):
 
         def _cb():
             self._started = True
-            screen.ids.started_value_label.text = "Y"
+            # screen.ids.started_value_label.text = "Y"
 
         _count_down(3, _cb)
 
@@ -189,7 +193,7 @@ class ExerciseWidget(widget.Widget):
             })
 
             screen = App.get_running_app().get_screen()
-            screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
+            # screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
         
         CallbackThread(
             name='critique_image_upload',
@@ -269,9 +273,9 @@ class ExerciseWidget(widget.Widget):
             
             self._display.canvas.clear()
 
-            state = ''
             pose: Pose = None
             progress = []
+            # TODO: extract all non-estimate steps from the try except
             try:
                 pose = self._estimator.estimate(frame)[0]
                 self._heuristics.update(pose)
@@ -279,7 +283,7 @@ class ExerciseWidget(widget.Widget):
                     self._heuristics.draw(frame)
                     pose.draw(frame)
                 if self._started:
-                    state, critiques, progress = self._exercise.update(pose, self._heuristics)
+                    self._state, critiques, progress = self._exercise.update(pose, self._heuristics)
                     for critique in critiques:
                         if critique.name not in self._critiques_given:
                             self._critiques_given.add(critique.name)
@@ -308,7 +312,7 @@ class ExerciseWidget(widget.Widget):
             # set state label text and update reps
             if self._started:
                 screen = App.get_running_app().get_screen()
-                screen.ids.state_value_label.text = state
+                screen.ids.state_value_label.text = self._state.str
                 screen.ids.rep_value_label.text = str(self._exercise.reps)
                 if self._exercise.reps > self._reps:
                     self._reps = self._exercise.reps

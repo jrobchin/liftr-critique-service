@@ -1,6 +1,6 @@
 from critique.pose.modules.pose import Pose, KEYPOINTS
 from critique.measure import PoseHeuristics, HEURISTICS, MV_DIRECTIONS
-from critique.app.exercises import Exercise, Critique, Progress
+from critique.app.exercises import Exercise, ExerciseState, Critique, Progress
 
 
 class ShoulderPress(Exercise):
@@ -14,17 +14,26 @@ class ShoulderPress(Exercise):
         super().__init__('Shoulder Press')
 
         self._add_state(
-            self.STATES.SET_UP,
-            self._state_set_up,
+            ExerciseState(
+                self.STATES.SET_UP,
+                "Set up",
+                self._state_set_up
+            ),
             initial=True
         )
         self._add_state(
-            self.STATES.UP,
-            self._state_up
+            ExerciseState(
+                self.STATES.UP,
+                "Raise",
+                self._state_up
+            )
         )
         self._add_state(
-            self.STATES.DOWN,
-            self._state_down
+            ExerciseState(
+                self.STATES.DOWN,
+                "Lower",
+                self._state_down
+            )
         )
 
         self._set_rep_transition(self.STATES.DOWN, self.STATES.UP)

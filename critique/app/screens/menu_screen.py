@@ -48,11 +48,14 @@ class MenuScreen(screenmanager.Screen):
         self.ids.time_label.text = f"{now.strftime('%I:%M%p')}"
 
         # Update weather
-        res = requests.get("https://api.openweathermap.org/data/2.5/weather?""units=metric&" + \
-                          f"id={settings.OWM_CITY_ID}&appid={settings.OWM_API_KEY}")
-        if res.status_code == 200:
-            data = res.json()
-            self.ids.weather_label.text = \
-                f"{data['weather'][0]['main']} {data['main']['temp']:.0f}°C"
-        else:
+        try:
+            res = requests.get("https://api.openweathermap.org/data/2.5/weather?""units=metric&" + \
+                            f"id={settings.OWM_CITY_ID}&appid={settings.OWM_API_KEY}")
+            if res.status_code == 200:
+                data = res.json()
+                self.ids.weather_label.text = \
+                    f"{data['weather'][0]['main']} {data['main']['temp']:.0f}°C"
+            else:
+                self.ids.weather_label.text = ""
+        except requests.exceptions.ConnectionError:
             self.ids.weather_label.text = ""

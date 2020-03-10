@@ -56,29 +56,28 @@ class Progress:
             )
         return progress
 
+ExerciseState = namedtuple('ExerciseState', 'id str func')
 
 class Exercise:
 
     class STATES:
         pass
     
-    State = namedtuple('State', 'func progress')
-
     def __init__(self, name):
-        self._states: Dict[str, self.State] = {}
+        self._states: Dict[str, ExerciseState] = {}
         self._critiques: List[Critique] = []
         self._progresses: List[Progress] = []
-        self._init_state = None
+        self.start_state = None
         self._rep_transition: tuple = None
 
         self.name = name
         self.state = None
         self.reps = 0
 
-    def _add_state(self, state, func, progress=None, initial=False):
+    def _add_state(self, state:ExerciseState, initial=False):
         if initial:
-            self._init_state = state
-        self._states[state] = self.State(func, progress)
+            self.start_state = state
+        self._states[state.id] = state
 
     def _add_critique(self, critique:Critique):
         self._critiques.append(critique)
@@ -92,8 +91,8 @@ class Exercise:
     def _check_reps(self, curr_state, next_state):
         if self._rep_transition is None:
             raise Exception("Repetition transition not set.")
-        return self._rep_transition[0] == curr_state and \
-               self._rep_transition[1] == next_state
+        return self._rep_transition[0] == curr_state.id and \
+               self._rep_transition[1] == next_state.id
 
     def _close_to(self, test_val, target_val, thresh):
         """
@@ -105,23 +104,24 @@ class Exercise:
             self,
             pose: Pose,
             heuristics: PoseHeuristics
-        ) -> Tuple[str, List[Critique], List[Progress]]:
+        ) -> Tuple[ExerciseState, List[Critique], List[Progress]]:
         if self.state is None:
-            self.state = self._init_state
+            self.state = self.start_state
 
         critiques = []
         for critique in self._critiques:
-            if self.state in critique.states:
+            if self.state.id in critique.states:
                 if critique.func(pose, heuristics):
                     critiques.append(critique)
 
         progress = []
         for p in self._progresses:
-            if self.state in p.states:
+            if self.state.id in p.states:
                 for p_i in p.check_progress(heuristics):
                     progress.append(p_i)
 
-        next_state = self._states[self.state].func(pose, heuristics)
+        next_state_id = self._states[self.state.id].func(pose, heuristics)
+        next_state = self._states[next_state_id]
         if next_state != self.state:
             if self._check_reps(self.state, next_state):
                 self.reps += 1
