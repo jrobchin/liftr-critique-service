@@ -3,7 +3,7 @@
     "python.pythonPath": "pyenv/bin/python",
     "python.linting.pylintArgs": [
         "--generated-members=numpy.*,torch.*,cv2.*,cv.*",
-        "--disable=missing-class-docstring,missing-function-docstring,missing-module-docstring,invalid-name,bad-whitespace"
+        "--disable=missing-class-docstring,missing-function-docstring,missing-module-docstring,invalid-name,bad-whitespace,wrong-import-position"
     ],
     "python.testing.unittestArgs": [
         "-v",

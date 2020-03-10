@@ -21,7 +21,7 @@ class MenuScreen(screenmanager.Screen):
         self._update_hud()
         Clock.schedule_interval(self._update_hud, 60)
 
-    def connect(self, *args):
+    def connect(self, *args): # pylint: disable=unused-argument
         app = App.get_running_app()
 
         def _on_success():
@@ -42,7 +42,7 @@ class MenuScreen(screenmanager.Screen):
     def _transition_to_about(self):
         pass
 
-    def _update_hud(self, dt=None):
+    def _update_hud(self, dt=None): # pylint: disable=unused-argument
         # Update time
         now = datetime.datetime.now()
         self.ids.time_label.text = f"{now.strftime('%I:%M%p')}"

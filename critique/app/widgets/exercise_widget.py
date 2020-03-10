@@ -131,6 +131,8 @@ class ExerciseWidget(widget.Widget):
         Clock.schedule_once(_cb, 1.5)
 
     def _start_exercise(self, reps=None):
+        if self._exercise is None:
+            return
 
         self._state = self._exercise.start_state
 
@@ -193,7 +195,7 @@ class ExerciseWidget(widget.Widget):
             })
 
             screen = App.get_running_app().get_screen()
-            # screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
+            screen.ids.critique_count_value_label.text = str(len(self._critiques_given))
         
         CallbackThread(
             name='critique_image_upload',

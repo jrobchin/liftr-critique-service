@@ -2,9 +2,9 @@ import json
 import logging
 logging.basicConfig(level=logging.INFO)
 
-import socketio
+import socketio # pylint: disable=wrong-import-position
 
-from critique import settings
+from critique import settings # pylint: disable=wrong-import-position
 
 class __SessionService__:
     def __init__(self):
@@ -44,11 +44,11 @@ class __SessionService__:
             'client_type': 'machine'
         }, callback=_cb)
         logging.info("Registered with backend")
-    
+
     def bind(self, event, func):
         self.client.on(event, func)
-    
+
     def emit(self, event, data, callback=None):
-        self.client.emit(event, data, callback=callback)   
+        self.client.emit(event, data, callback=callback)
 
 session_service = __SessionService__()

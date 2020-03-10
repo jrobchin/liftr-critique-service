@@ -49,7 +49,7 @@ class Progress:
             h_val = heurisitics.get_angle(h_id)
             if h_val is None:
                 continue
-            
+
             h_progress = (h_val - low) / (high - low)
             progress.append(
                 (h_id, kpt_id, h_progress)
@@ -62,7 +62,7 @@ class Exercise:
 
     class STATES:
         pass
-    
+
     def __init__(self, name):
         self._states: Dict[str, ExerciseState] = {}
         self._critiques: List[Critique] = []
