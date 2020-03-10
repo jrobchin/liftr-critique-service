@@ -28,7 +28,8 @@
         # Debug Bar
         BoxLayout:
             orientation: 'horizontal'
-            height: 40
+            height: 40 * int(settings.DEBUG_BUTTONS)
+            opacity: int(settings.DEBUG_BUTTONS)
             size_hint: 1.0, None
 
             Label:
@@ -109,50 +110,6 @@
                     display._test_critique()
 
             Label:
-                text: "Workout:"
-                size: self.texture_size[0] + 20, 40
-                size_hint: None, None
-
-            # Label:
-            #     id: workout_label
-            #     text: ""
-            #     size: 150, 40
-            #     size_hint: None, None
-            
-            Label:
-                text: "Started:"
-                size: self.texture_size[0] + 20, 40
-                size_hint: None, None
-
-            Label:
-                id: started_value_label
-                text: "N"
-                size: 30, 40
-                size_hint: None, None
-
-            Label:
-                text: "State:"
-                size: self.texture_size[0] + 20, 40
-                size_hint: None, None
-
-            Label:
-                id: state_value_label
-                text: ""
-                size: 100, 40
-                size_hint: None, None
-
-            Label:
-                text: "Reps:"
-                size: self.texture_size[0] + 20, 40
-                size_hint: None, None
-
-            Label:
-                id: rep_value_label
-                text: ""
-                size: 30, 40
-                size_hint: None, None
-
-            Label:
                 text: "Critiques:"
                 size: self.texture_size[0] + 20, 40
                 size_hint: None, None
@@ -169,31 +126,98 @@
 
         StackLayout:
             orientation: 'tb-lr'
-            canvas:
-                Color:
-                    rgb: 0, 0, 0
-                    a: 0.3
-                Rectangle:
-                    size: 470, 130
-                    pos: 0, self.top-130
 
-            Label:
-                text: "[color=#D00000]LIFTR[/color] [color=#FFFFFF]train[/color]"
-                markup: True
+            StackLayout:
+                orientation: 'tb-lr'
+                size: 470, 130
                 size_hint: None, None
-                size: self.texture_size
-                font_size: 62
-                padding_x: 10
-                font_name: 'critique/app/assets/fonts/HelveticaNeueHv.ttf'
+                canvas:
+                    Color:
+                        rgb: 0, 0, 0
+                        a: 0.3
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+
+                Label:
+                    text: "[color=#D00000]LIFTR[/color] [color=#FFFFFF]train[/color]"
+                    markup: True
+                    size_hint: None, None
+                    size: self.texture_size
+                    font_size: 62
+                    padding_x: 10
+                    font_name: 'critique/app/assets/fonts/HelveticaNeueHv.ttf'
+                
+                Label:
+                    id: workout_label
+                    text: "Select workout on device"
+                    markup: True
+                    size_hint: None, None
+                    size: self.texture_size
+                    font_size: 38
+                    padding_x: 10
             
-            Label:
-                id: workout_label
-                text: "Select workout on device"
-                markup: True
+            Widget:
+                size: 0, 20
                 size_hint: None, None
-                size: self.texture_size
-                font_size: 38
-                padding_x: 10
+            
+            StackLayout:
+                size: 300, 35
+                size_hint: None, None
+
+                canvas:
+                    Color:
+                        rgb: 0, 0, 0
+                        a: 0.3
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                
+                Label:
+                    text: "STEP:"
+                    markup: True
+                    size_hint: None, None
+                    size: self.texture_size
+                    font_size: 26
+                    padding_x: 10
+                
+                Label:
+                    id: state_value_label
+                    text: ""
+                    markup: True
+                    color: 208/255, 0, 0, 1
+                    size_hint: None, None
+                    size: self.texture_size
+                    font_size: 26
+
+            StackLayout:
+                size: 300, 35
+                size_hint: None, None
+
+                canvas:
+                    Color:
+                        rgb: 0, 0, 0
+                        a: 0.3
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                
+                Label:
+                    text: "REPS:"
+                    markup: True
+                    size_hint: None, None
+                    size: self.texture_size
+                    font_size: 26
+                    padding_x: 10
+                
+                Label:
+                    id: rep_value_label
+                    text: ""
+                    color: 208/255, 0, 0, 1
+                    markup: True
+                    size_hint: None, None
+                    size: self.texture_size
+                    font_size: 26
 
     # Overlay
     FloatLayout:
@@ -209,7 +233,7 @@
                 canvas:
                     Color:
                         rgb: 0, 0, 0
-                        a: 0.7
+                        a: 0.0
                     RoundedRectangle:
                         size: self.size
                         pos: self.pos
@@ -217,11 +241,20 @@
             Label:
                 id: workout_select_info_label
                 font_size: 32
-                text_size: (workout_select_info_box.size[0], None)
-                padding_x: 100
+                # text_size: (workout_select_info_box.size[0], None)
+                size_hint: 1, None
+                size_y: 200
+                # padding_x: 100
                 opacity: 0
-                halign: 'center'
+                halign: "center"
                 text: ""
+                canvas.before:
+                    Color:
+                        rgb: 0, 0, 0
+                        a: 0.7
+                    RoundedRectangle:
+                        size: self.size
+                        pos: self.pos
 
             FloatLayout:
                 id: count_down_box

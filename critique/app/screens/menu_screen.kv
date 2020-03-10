@@ -1,3 +1,5 @@
+#:import settings critique.settings
+
 <MenuScreen>:
     canvas:
         Rectangle:
@@ -6,6 +8,8 @@
             source: 'critique/app/assets/menu-imgs/menu-2.jpg'
 
     FloatLayout:
+        opacity: int(settings.DEBUG_BUTTONS)
+
         Button:
             text: 'Refresh Session'
             size_hint: None, None
