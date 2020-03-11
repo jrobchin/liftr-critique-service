@@ -232,18 +232,18 @@ class ExerciseWidget(widget.Widget):
         _canvas = self._display.canvas
 
         # Draw pose
-        if pose is not None:
-            for kpt_id in range(KEYPOINTS.NUM_KPTS):
-                kpt_pos = pose.keypoints[kpt_id].tolist()
-                if kpt_pos[0] == -1:
-                    continue
-                kpt_pos_t = _transform_kpt_pos(kpt_pos, scale_factors, texture_pos)
-                _canvas.add(Color(0, 0, 1, 0.5))
-                _canvas.add(Ellipse(size=(marker_size, marker_size), pos=(kpt_pos_t[0] - marker_size//2, kpt_pos_t[1] - marker_size//2)))
+        # if pose is not None:
+        #     for kpt_id in range(KEYPOINTS.NUM_KPTS):
+        #         kpt_pos = pose.keypoints[kpt_id].tolist()
+        #         if kpt_pos[0] == -1:
+        #             continue
+        #         kpt_pos_t = _transform_kpt_pos(kpt_pos, scale_factors, texture_pos)
+        #         _canvas.add(Color(0, 0, 1, 0.5))
+        #         _canvas.add(Ellipse(size=(marker_size, marker_size), pos=(kpt_pos_t[0] - marker_size//2, kpt_pos_t[1] - marker_size//2)))
         
         guide_size = 75
         for h_id, kpt_id, val in progress:
-            fill_size = max(10, guide_size * val)
+            fill_size = min(max(10, guide_size * val), guide_size)
 
             kpt_pos = pose.keypoints[kpt_id].tolist()
             if kpt_pos[0] == -1:
@@ -251,9 +251,9 @@ class ExerciseWidget(widget.Widget):
             kpt_pos_t = _transform_kpt_pos(kpt_pos, scale_factors, texture_pos)
             _canvas.add(Color(1-val, val, 0))
             _canvas.add(Ellipse(size=(fill_size, fill_size), pos=(kpt_pos_t[0] - fill_size//2, kpt_pos_t[1] - fill_size//2)))
-            _canvas.add(Color(0, 0, 1))
+            _canvas.add(Color(1, 1, 1))
             _canvas.add(
-                Line(circle=(*kpt_pos_t, guide_size//2))
+                Line(circle=(*kpt_pos_t, guide_size//2), width=2.5)
             )
 
 
