@@ -131,6 +131,8 @@ class Exercise:
 
 
 from .shoulder_press import ShoulderPress
+from .bicep_curl import BicepCurl
 EXERCISES: Dict[str, Exercise] = {
-    'shoulder_press': ShoulderPress
+    'shoulder_press': ShoulderPress,
+    'bicep_curl': BicepCurl,
 }

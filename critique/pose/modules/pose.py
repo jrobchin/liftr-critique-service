@@ -96,7 +96,7 @@ class Pose():
             self.id = Pose.last_id + 1
             Pose.last_id += 1
 
-    def draw(self, img, kpt_id_labels=False):
+    def draw(self, img, kpt_id_labels=False, kpt_coords=False):
         assert self.keypoints.shape == (Pose.num_kpts, 2)
 
         for part_id in range(len(BODY_PARTS_PAF_IDS) - 2):
@@ -117,6 +117,14 @@ class Pose():
             for kpt_id in range(self.num_kpts):
                 kpt_pos = self.keypoints[kpt_id]
                 cv2.putText(img, f"{kpt_id} {self.kpt_names[kpt_id]}", (int(kpt_pos[0]), int(kpt_pos[1])-20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+
+        if kpt_coords:
+            for kpt_id in range(self.num_kpts):
+                if "l_" not in self.kpt_names[kpt_id]:
+                    continue
+                kpt_pos = self.keypoints[kpt_id]
+                cv2.putText(img, f"{self.kpt_names[kpt_id]} {int(kpt_pos[0]), int(kpt_pos[1])}", (int(kpt_pos[0]), int(kpt_pos[1])-20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
+
 
     def get_keypoint_index(self, name):
         try:
