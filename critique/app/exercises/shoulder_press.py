@@ -7,8 +7,8 @@ class ShoulderPress(Exercise):
 
     class STATES:
         SET_UP = 'SET_UP'
-        UP = 'UP'
-        DOWN = 'DOWN'
+        RAISE = 'UP'
+        LOWER = 'DOWN'
 
     def __init__(self):
         super().__init__('Shoulder Press')
@@ -23,25 +23,25 @@ class ShoulderPress(Exercise):
         )
         self._add_state(
             ExerciseState(
-                self.STATES.UP,
+                self.STATES.RAISE,
                 "Raise",
                 self._state_up
             )
         )
         self._add_state(
             ExerciseState(
-                self.STATES.DOWN,
+                self.STATES.LOWER,
                 "Lower",
                 self._state_down
             )
         )
 
-        self._set_rep_transition(self.STATES.DOWN, self.STATES.UP)
+        self._set_rep_transition(self.STATES.LOWER, self.STATES.RAISE)
 
         self._add_critique(
             Critique(
                 'lock_elbows',
-                [self.STATES.UP],
+                [self.STATES.RAISE],
                 'Make sure not to lock your elbows at the top of your press.',
                 self._critique_lock_elbows
             )
@@ -49,19 +49,44 @@ class ShoulderPress(Exercise):
         self._add_critique(
             Critique(
                 'too_low',
-                [self.STATES.DOWN],
+                [self.STATES.LOWER, self.STATES.RAISE],
                 'Your arms should make about a 90 degree angle with your body at the bottom.',
                 self._critique_too_low
             )
         )
 
-        raise_progress = Progress(
-            'raise',
-            [self.STATES.UP]
+        raise_shoulder_progress = Progress(
+            'raise_shoulder',
+            [self.STATES.RAISE]
         )
-        raise_progress.add_range(HEURISTICS.RIGHT_SHLDR, KEYPOINTS.R_SHO, 180, 130)
-        raise_progress.add_range(HEURISTICS.LEFT_SHLDR, KEYPOINTS.L_SHO, 180, 130)
-        self._add_progress(raise_progress)
+        raise_shoulder_progress.add_range(HEURISTICS.RIGHT_SHLDR, KEYPOINTS.R_SHO, 180, 130)
+        raise_shoulder_progress.add_range(HEURISTICS.LEFT_SHLDR, KEYPOINTS.L_SHO, 180, 130)
+        self._add_progress(raise_shoulder_progress)
+
+        lower_shoulder_progress = Progress(
+            'lower_shoulder',
+            [self.STATES.LOWER]
+        )
+        lower_shoulder_progress.add_range(HEURISTICS.RIGHT_SHLDR, KEYPOINTS.R_SHO, 130, 180)
+        lower_shoulder_progress.add_range(HEURISTICS.LEFT_SHLDR, KEYPOINTS.L_SHO, 130, 180)
+        self._add_progress(lower_shoulder_progress)
+
+        raise_elbow_progress = Progress(
+            'raise_elbow',
+            [self.STATES.RAISE]
+        )
+        raise_elbow_progress.add_range(HEURISTICS.RIGHT_ELBOW, KEYPOINTS.R_ELB, 90, 155)
+        raise_elbow_progress.add_range(HEURISTICS.LEFT_ELBOW, KEYPOINTS.L_ELB, 90, 155)
+        self._add_progress(raise_elbow_progress)
+
+        lower_elbow_progress = Progress(
+            'lower_elbow',
+            [self.STATES.LOWER]
+        )
+        lower_elbow_progress.add_range(HEURISTICS.RIGHT_ELBOW, KEYPOINTS.R_ELB, 155, 90)
+        lower_elbow_progress.add_range(HEURISTICS.LEFT_ELBOW, KEYPOINTS.L_ELB, 155, 90)
+        self._add_progress(lower_elbow_progress)
+        
 
     # States
     def _state_set_up(self, pose:Pose, heuristics:PoseHeuristics):
@@ -74,15 +99,15 @@ class ShoulderPress(Exercise):
         l_wri_movement = heuristics.get_movement(KEYPOINTS.L_WRI)
 
         if left_shldr and right_shldr:
-            if self._close_to(left_shldr, 180, 20) and \
-               self._close_to(right_shldr, 180, 20) and \
-               self._close_to(right_elbow, 90, 20) and \
-               self._close_to(left_elbow, 90, 20) and \
+            if self._in_range(left_shldr, 180, 20) and \
+               self._in_range(right_shldr, 180, 20) and \
+               self._in_range(right_elbow, 90, 20) and \
+               self._in_range(left_elbow, 90, 20) and \
                r_wri_movement.x == MV_DIRECTIONS.HOLD and \
                r_wri_movement.y == MV_DIRECTIONS.HOLD and \
                l_wri_movement.x == MV_DIRECTIONS.HOLD and \
                l_wri_movement.y == MV_DIRECTIONS.HOLD:
-                return self.STATES.UP
+                return self.STATES.RAISE
         return self.STATES.SET_UP
 
     def _state_up(self, pose:Pose, heuristics:PoseHeuristics):
@@ -94,8 +119,8 @@ class ShoulderPress(Exercise):
                 l_wri_movement = heuristics.get_movement(KEYPOINTS.L_WRI)
                 if r_wri_movement.y == MV_DIRECTIONS.HOLD and \
                    l_wri_movement.y == MV_DIRECTIONS.HOLD:
-                    return self.STATES.DOWN
-        return self.STATES.UP
+                    return self.STATES.LOWER
+        return self.STATES.RAISE
 
     def _state_down(self, pose:Pose, heuristics:PoseHeuristics):
         left_shldr = heuristics.get_angle(HEURISTICS.LEFT_SHLDR)
@@ -106,8 +131,8 @@ class ShoulderPress(Exercise):
                 l_wri_movement = heuristics.get_movement(KEYPOINTS.L_WRI)
                 if r_wri_movement.y == MV_DIRECTIONS.HOLD and \
                    l_wri_movement.y == MV_DIRECTIONS.HOLD:
-                    return self.STATES.UP
-        return self.STATES.DOWN
+                    return self.STATES.RAISE
+        return self.STATES.LOWER
 
     # Critiques
     def _critique_lock_elbows(self, pose:Pose, heuristics:PoseHeuristics):

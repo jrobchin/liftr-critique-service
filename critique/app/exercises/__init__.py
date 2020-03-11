@@ -93,8 +93,8 @@ class Exercise:
             raise Exception("Repetition transition not set.")
         return self._rep_transition[0] == curr_state.id and \
                self._rep_transition[1] == next_state.id
-
-    def _close_to(self, test_val, target_val, thresh):
+    
+    def _in_range(self, test_val, target_val, thresh):
         """
         Returns True if `test_val` is within the `thresh` of `target_val`.
         """
