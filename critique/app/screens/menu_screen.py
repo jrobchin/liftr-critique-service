@@ -3,6 +3,7 @@ import datetime
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix import screenmanager
+from kivy.core.window import Window
 import requests
 
 from critique import settings
@@ -13,6 +14,9 @@ from critique.app.widgets import SessionKeyLabel # pylint: disable=unused-import
 class MenuScreen(screenmanager.Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
         session_service.bind('start_session', lambda _: self._transition_to_display())
 
@@ -33,6 +37,15 @@ class MenuScreen(screenmanager.Screen):
             app.state['connected'] = False
 
         session_service.connect(on_success=_on_success, on_error=_on_error)
+
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        if keycode[1] == 'r':
+            self.connect()
+        return True
 
     def _transition_to_display(self):
         self.manager.get_screen('display').ids.display.start()

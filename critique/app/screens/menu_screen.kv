@@ -8,28 +8,29 @@
             source: 'critique/app/assets/menu-imgs/menu-2.jpg'
 
     FloatLayout:
-        opacity: int(settings.DEBUG_BUTTONS)
 
-        Button:
-            text: 'Refresh Session'
-            size_hint: None, None
-            size: 150, 40
-            border: 0, 0, 0, 0
-            color: 1, 1, 1, 1
-            background_color: 1, 1, 1, 0.7
-            on_press:
-                root.connect()
+        Widget:
+            opacity: int(settings.DEBUG_BUTTONS)
+            Button:
+                text: 'Refresh Session'
+                size_hint: None, None
+                size: 150, 40
+                border: 0, 0, 0, 0
+                color: 1, 1, 1, 1
+                background_color: 1, 1, 1, 0.7
+                on_press:
+                    root.connect()
 
-        Button:
-            text: 'Start'
-            size_hint: None, None
-            x: 150
-            size: 150, 40
-            border: 0, 0, 0, 0
-            color: 1, 1, 1, 1
-            background_color: 1, 1, 1, 0.7
-            on_press:
-                root._transition_to_display()
+            Button:
+                text: 'Start'
+                size_hint: None, None
+                x: 150
+                size: 150, 40
+                border: 0, 0, 0, 0
+                color: 1, 1, 1, 1
+                background_color: 1, 1, 1, 0.7
+                on_press:
+                    root._transition_to_display()
 
         AnchorLayout:
             anchor_x: 'center'

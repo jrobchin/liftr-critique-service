@@ -3,6 +3,7 @@ import uuid
 import logging
 from typing import Tuple
 
+from kivy.core.window import Window
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix import widget, image
@@ -26,6 +27,9 @@ class ExerciseWidget(widget.Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
         # TODO: convert to properties
         self._cap = None
@@ -52,6 +56,19 @@ class ExerciseWidget(widget.Widget):
         self.bind(
             camera=self._on_camera
         )
+
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        if keycode[1] == 'd':
+            settings.DEBUG_POSE = not settings.DEBUG_POSE
+        elif keycode[1] == 'b':
+            root = App.get_running_app().root
+            root.transition.direction = 'right'
+            root.current = 'menu'
+        return True
 
     def start(self):
         Clock.schedule_once(self._on_start, 0)
@@ -93,6 +110,7 @@ class ExerciseWidget(widget.Widget):
 
     def _select_exercise(self, exercise):
         selected_exercise = EXERCISES.get(exercise)
+        self._started = False
 
         screen = App.get_running_app().get_screen()
 
@@ -113,6 +131,7 @@ class ExerciseWidget(widget.Widget):
             return
 
         self._exercise = selected_exercise()
+        self._reps = 0
 
         # Notify workout selection
         # screen.ids.workout_label.opacity = 0
@@ -137,7 +156,9 @@ class ExerciseWidget(widget.Widget):
         self._state = self._exercise.start_state
 
         screen = App.get_running_app().get_screen()
-
+        if screen.name != 'display':
+            return
+            
         def _count_down(n, callback):
             def _animation(n):
                 screen.ids.count_down_label.text = str(n)
